@@ -10,5 +10,5 @@ package mcs.tds;
  * 
  */
 public interface INFO {
-
+	
 }
