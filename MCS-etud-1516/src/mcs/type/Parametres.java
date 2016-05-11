@@ -4,32 +4,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Parametres {
-	protected HashMap<String, DtypeImpl> table;
-	protected ArrayList<DtypeImpl> types;
+	protected HashMap<String, DTYPEImpl> table;
+	protected ArrayList<String> ordreParam;
 
 	public Parametres(){
-		table = new HashMap<String, DtypeImpl>();
-		types = new ArrayList<DtypeImpl>();
+		table = new HashMap<String, DTYPEImpl>();
+		ordreParam = new ArrayList<String>();
 	}
 
-	public Parametres(HashMap<String, DtypeImpl> t,ArrayList<DtypeImpl> tp){
+	public Parametres(HashMap<String, DTYPEImpl> t,ArrayList<String> op){
 		table = t;
-		types = tp;
+		ordreParam = op;
 	}
 
-	public DtypeImpl getParametre(String ident){
+	public DTYPEImpl getParametre(String ident){
 		return table.get(ident);
 	}
-	public ArrayList<DtypeImpl> getTypes(){
-		return types;
+	public ArrayList<String> getordreParam(){
+		return ordreParam;
 	}
 
-	public void ajouterType(DtypeImpl type){
-		types.add(type);
+	public void ajouterType(String ident){
+		ordreParam.add(ident);
 	}
 
-	public void ajouterParametre(String ident, DtypeImpl type){
+	public void ajouterParametre(String ident, DTYPEImpl type){
 		table.put(ident, type);
-		types.add(type);
+		ordreParam.add(ident);
 	}
 }
