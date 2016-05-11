@@ -23,6 +23,19 @@ syn code_asm : STRING for ASM;
 -- la TDS courante
 inh tds_asm : TDS for ASM;
 
+inh tds : TDS for 
+         ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
+         PARFS, PARF, PARFSX, ES, ESX, 
+         E, AFFX, A, AX, R, RX, T, TX, F,FX
+         ;
+syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
+         E, AFFX, A, AX, R, RX, T, TX, F,FX;
+syn params : Parametres for PARFS, PARFSX, ESX, ES, FX;
+inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R , A;
+
+inh htype: DtypeImpl for   PTRS, FX;
+
+
 --terminals
 space separateur is  "[\r\n\t ]+";     
 space comm is  "\/\/[^\n]*\n";
@@ -99,34 +112,105 @@ do
    else
      ENTITES^machine := machine;
    end
+  ENTITES^tds := new TDS();
 end
 }
 -- ecrit le code dans un fichier
 #gen {
 local
-do
-   machine.writeCode(PROGRAMME^source.getFileName(),"; no code\n");  
+do  --if faut chercher le main existe ou pas
+    --if (ENTITES^std.chercherLocalement("main")= null) then
+    -- error(main_nexiste_pas);
+      machine.writeCode(PROGRAMME^source.getFileName(),"; no code\n");  
 end
 }
 ENTITES -> ;
+
+
 ENTITES -> ENTITE ENTITES ;
 -- definition d'un nom de type (commence par une majuscule)
-ENTITE -> typedef TYPE identc pv ;
+ENTITE -> typedef TYPE identc pv #tds ;
 -- definition d'une variable globale ou d'une fonction
 -- (commence par une minuscule)
+  #tds{
+  local 
+    i: INFO;
+  do
+  i := ENTITE^tds.chercherLocalement(identc^txt);
+   if i /= null then
+      error(la_fonction_existe_deja, xxxxx);
+     end
+  
+  
+ end }
 ENTITE ->  TYPE ident DECL ;
 -- Variable
 DECL -> pv;
-DECL -> FONCTION ;
+DECL -> #tds FONCTION ;
+#tds{
+do
+    --FONCTION^tds := ;
+end
+}
 -- Fonction
-FONCTION ->  paro PARFS parf BLOC ;
+FONCTION ->  paro PARFS parf BLOC #tdstype ;
+#tdstype{
+local
+    i:INFO;
+    ifonc : INFOFONC;
+do
+    --i := FONCTION^tds.chercherLocalement(xxxxx); --ident^txt
+    --if i /= null then
+     -- error(la_fonction_existe_deja, xxxxx);
+      --end
+ end}
 -- parametres de fonctions
-PARFS ->  ;
-PARFS ->  PARF PARFSX ;
-PARFSX ->  ;
-PARFSX ->  virg PARF PARFSX ;
-PARF ->  TYPE ident ;
+PARFS ->#param;
+#param{
+do
+    PARFS^params := new Parametres();
+   
+end}
+PARFS -> #init PARF PARFSX #fin;
+#init{
+local
+    p : Parametres;
+do
+    p := new Parametres();
+    PARF^hparams := p;
+    PARFSX^hparams := p;
+   
+end}
+#fin{
+do
+    PARFS^params := PARFSX^params;
+ 
+end}
+PARFSX -> #end;
+#end{
+do
+    PARFSX^params := PARFSX^hparams;
+
+end}
+PARFSX ->  virg PARF PARFSX #fin;
+#fin{
+do
+    PARFSX^params := PARFSX1^params;
+end
+}
+PARF ->  TYPE ident #tdstype ;
 -- les types (de base, noms, struct et pointeurs)
+#tdstype{
+local
+    t : DTYPE;
+    iv : INFOVAR;
+do
+    t := PARF^hparams.getParametre(ident^txt);
+    if (t = null) then
+     iv := new INFOVAR(xxxxxx);
+    end
+ end
+}
 TYPE -> STYPE  PTRS ;
 -- type de base
 -- des * pour definir un pointeur
@@ -145,9 +229,15 @@ CHAMPS -> ;
 -- un nom de champ commence par une minuscule
 CHAMPS -> CHAMP CHAMPS ;
 CHAMP -> TYPE ident pv;
+
 -- corps de fonction et bloc d'instructions
-BLOC ->  aco INSTS acf ;
+BLOC ->  aco #tds INSTS acf ;
 -- instructions
+#tds{
+do
+    INSTS^tds := new TDS(BLOC^tds);
+end
+}
 INSTS ->   ;
 INSTS ->  INST INSTS  ;
 -- declaration de variable locale avec ou sans init 
@@ -155,8 +245,13 @@ INST ->  TYPE ident AFFX pv ;
 -- instruction expression (affectation et appel de procedure)
 INST -> E pv ;
 -- bloc d'instructions
-INST ->  BLOC  ;
+INST -> #tds BLOC  ;
 -- conditionnelle
+#tds{
+do
+    BLOC^tds := new TDS(INST^tds);
+end
+}
 INST ->   si paro E parf BLOC SIX ;
 SIX ->    sinon BLOC ;
 SIX -> ;
