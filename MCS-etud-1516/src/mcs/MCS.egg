@@ -25,7 +25,7 @@ inh tds_asm : TDS for ASM;
 
 inh tds : TDS for 
          ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
-         PARFS, PARF, PARFSX, ES, ESX, 
+         PARFS, PARF, PARFSX, ES, ESX,DECL, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX
          ;
 syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
@@ -33,7 +33,10 @@ syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX,
 syn params : Parametres for PARFS, PARFSX, ESX, ES, FX;
 inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R , A;
 
-inh htype: DtypeImpl for   PTRS, FX;
+inh htype: DtypeImpl for PTRS, FX;
+inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
+syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITES,PARFS,PARF,PARFSX, SIX;
+inh hdep : Emplacement for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS;     
 
 
 --terminals
@@ -138,7 +141,7 @@ ENTITE -> typedef TYPE identc pv #tds ;
   do
   i := ENTITE^tds.chercherLocalement(identc^txt);
    if i /= null then
-      error(la_fonction_existe_deja, xxxxx);
+      error(ident_existe_deja, identc^txt);
      end
   
   
@@ -149,11 +152,11 @@ DECL -> pv;
 DECL -> #tds FONCTION ;
 #tds{
 do
-    --FONCTION^tds := ;
+    FONCTION^tds := DECL^tds;
 end
 }
 -- Fonction
-FONCTION ->  paro PARFS parf BLOC #tdstype ;
+FONCTION ->  paro PARFS parf  BLOC #tdstype ;
 #tdstype{
 local
     i:INFO;
@@ -162,6 +165,10 @@ do
     --i := FONCTION^tds.chercherLocalement(xxxxx); --ident^txt
     --if i /= null then
      -- error(la_fonction_existe_deja, xxxxx);
+      --else
+      -- creer une variable      ??????? problème pas d'acces a Type^type dans la déclaration ?
+      --ifonc := new INFOFONC(TYPE^type, FONCTION^hdep, PARFS^params); --initialiser deplacement
+     -- FONCTION^tds.inserer(ident^txt,  ifonc);
       --end
  end}
 -- parametres de fonctions
@@ -169,9 +176,9 @@ PARFS ->#param;
 #param{
 do
     PARFS^params := new Parametres();
-   
+    PARFS^dep:=PARFS^hdep;
 end}
-PARFS -> #init PARF PARFSX #fin;
+PARFS -> #init PARF #hdep PARFSX #fin;
 #init{
 local
     p : Parametres;
@@ -179,25 +186,42 @@ do
     p := new Parametres();
     PARF^hparams := p;
     PARFSX^hparams := p;
-   
+    PARF^hdep:=PARFS^hdep;
+end}
+#hdep{
+do 
+   PARFSX^hdep:=PARF^dep;
 end}
 #fin{
 do
     PARFS^params := PARFSX^params;
- 
+    PARFS^dep:=PARFSX^dep;
 end}
+
+
 PARFSX -> #end;
 #end{
 do
     PARFSX^params := PARFSX^hparams;
-
+    PARFSX^dep:=PARFSX^hdep;
 end}
-PARFSX ->  virg PARF PARFSX #fin;
+
+PARFSX ->  virg #hd1 PARF #hd2 PARFSX #fin;
+#hd1{
+do
+   PARF^hdep:=PARFSX^hdep;
+   end}
+#hd2{
+do
+   PARFSX1^hdep:=PARF^dep;
+   end}
 #fin{
 do
     PARFSX^params := PARFSX1^params;
+    PARFSX^dep:=PARFSX1^dep;
 end
 }
+
 PARF ->  TYPE ident #tdstype ;
 -- les types (de base, noms, struct et pointeurs)
 #tdstype{
@@ -211,50 +235,177 @@ do
     end
  end
 }
-TYPE -> STYPE  PTRS ;
+TYPE -> STYPE  #htype PTRS #type;
 -- type de base
 -- des * pour definir un pointeur
-PTRS -> ;
-PTRS -> mult PTRS ;
+#htype{
+do 
+  PTRS^htype:= STYPE^type;
+end}
+#type {
+do
+  TYPE^type := PTRS^type;
+end}
+
+PTRS -> #type;
+#type{
+do
+    PTRS^type := PTRS^htype;
+end}
+
+PTRS -> mult PTRS #type;
 -- types de base
-STYPE-> void  ;
-STYPE-> int ;
-STYPE-> char ;
+#type {
+do
+  PTRS^type := new POINTEUR(PTRS1^type);
+  --PTRS^code := PTRS1^code;
+end}
+
+STYPE-> void  #type ;
+#type{
+do
+    STYPE^type := new DtypeImpl("void", 0);
+end
+}
+STYPE-> int #type;
+#type{
+do
+    STYPE^type := new DtypeImpl("entier", 1);
+end
+}
+STYPE-> char #type;
 -- nom de type (commence par une majuscule)
-STYPE -> identc;
+#type{
+do
+    STYPE^type := new DtypeImpl("caractere", 1);
+  
+end
+}
+STYPE -> identc #type;
 -------------  
 -- et struct
-STYPE -> struct aco CHAMPS acf ;
+#type{
+do
+    STYPE^type := new DtypeImpl("caracteretc", 1);
+  
+end
+}
+STYPE -> struct aco CHAMPS acf ;     --??????
 CHAMPS -> ;
 -- un nom de champ commence par une minuscule
 CHAMPS -> CHAMP CHAMPS ;
 CHAMP -> TYPE ident pv;
 
 -- corps de fonction et bloc d'instructions
-BLOC ->  aco #tds INSTS acf ;
+BLOC ->  aco #tds INSTS #type acf ;
 -- instructions
 #tds{
 do
     INSTS^tds := new TDS(BLOC^tds);
+    INSTS^hdep:=BLOC^hdep;
 end
 }
-INSTS ->   ;
-INSTS ->  INST INSTS  ;
+#type{
+do
+  BLOC^type := INSTS^type;
+  BLOC^dep:=INSTS^dep;
+end}
+
+INSTS -> #type  ;
+#type{
+do 
+  INSTS^type:=new DtypeImpl("void",0);
+  INSTS^dep:=INSTS^hdep;
+end}
+
+INSTS -> #htype INST #hdep INSTS #type  ;
 -- declaration de variable locale avec ou sans init 
+#htype{
+do
+INST^htyp:=INSTS^htyp;
+INSTS1^htyp:=INSTS^htyp;
+INST^hdep:=INSTS^hdep;
+end}
+#hdep{
+do
+  INSTS1^hdep:=INST^dep;
+end}
+#type{
+local
+    s : STRING;
+do
+    s := INST^type.getNom();
+    if s.equals("void")then
+        INSTS^type := INSTS1^type;
+    else
+        INSTS^type := INST^type; --type de premier INST non void rencontre
+    end
+    INSTS^dep:=INSTS1^dep;
+end}
+
 INST ->  TYPE ident AFFX pv ;
 -- instruction expression (affectation et appel de procedure)
-INST -> E pv ;
+INST -> #params E pv #r ;
+#params{
+do
+  E^hparams:=new Parametres();
+  INST^dep:=INST^hdep;
+ 
+ end}
+#r{
+do
+ INST^type := new DtypeImpl("void", 0);
+ if ~(E^type.compareTo(new DtypeImpl("void",0))) then
+    error(pas_instruction, E^type);
+ end
+ INST^dep := new Emplacement(INST^hdep.getDep() + E^type.getTaille(), INST^hdep.getReg());
+end}
+
 -- bloc d'instructions
-INST -> #tds BLOC  ;
+INST -> #tds BLOC #type  ;
 -- conditionnelle
 #tds{
 do
     BLOC^tds := new TDS(INST^tds);
+    BLOC^hdep:=INST^hdep;
 end
 }
-INST ->   si paro E parf BLOC SIX ;
-SIX ->    sinon BLOC ;
-SIX -> ;
+#type{
+do
+ INST^type := BLOC^type;
+ INST^dep:=BLOC^dep;
+end}
+
+INST ->   si paro E parf #tds BLOC SIX ;
+#tds{
+do
+    BLOC^tds := new TDS(INST^tds);
+    SIX^tds := new TDS(INST^tds);
+    BLOC^htyp:=INST^htyp;
+    SIX^htyp:=INST^htyp;
+    BLOC^hdep:=INST^hdep;
+    SIX^hdep:=INST^hdep;
+end
+}
+SIX ->   sinon #hdep BLOC #r ;
+#hdep{
+do
+ BLOC^hdep:=SIX^hdep;
+end}
+#r{
+do
+     SIX^type := BLOC^type;
+     SIX^dep:=BLOC^dep;
+    
+end}   
+
+SIX -> #type;
+#type{
+do
+     SIX^type := new DtypeImpl ("void",0);
+     SIX^dep:=SIX^hdep;
+end}
+
 -- retour de fonction
 INST ->  retour  E pv ;
 
