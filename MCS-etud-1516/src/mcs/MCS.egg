@@ -37,7 +37,7 @@ inh htype: DtypeImpl for PTRS, FX;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
 syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX,TYPE, CHAMPS, CHAMP;
 inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP;     
-inh types : DTYPE for CHAMPS, CHAMP;
+
 inh champs : DTYPE for CHAMPS, CHAMP;
 syn code : String for INSTS, INST, ENTITES, ENTITE;
 --terminals
@@ -370,9 +370,20 @@ do
 end
 }
  
-CHAMPS -> ;
+CHAMPS -> #dep ;
+#dep{
+do
+CHAMPS^dep:=CHAMPS^hdep;
+end}
+
 -- un nom de champ commence par une minuscule
-CHAMPS -> CHAMP #4 CHAMPS ;
+CHAMPS -> CHAMP #4 CHAMPS #5 ;
+#5{
+do
+CHAMPS^dep:= CHAMPS1^dep;
+end}
+
+
 #4{
 do
 CHAMPS1^hdep:=CHAMP^dep;
