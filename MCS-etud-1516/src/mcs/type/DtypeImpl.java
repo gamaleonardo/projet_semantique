@@ -1,6 +1,6 @@
 package mcs.type;
 
-public class DTYPEImpl implements DTYPE{
+public class DtypeImpl implements DTYPE{
 		protected int taille;
 
 		public int getTaille() {
@@ -13,7 +13,7 @@ public class DTYPEImpl implements DTYPE{
 			return nom;
 		}
 
-		public DTYPEImpl(String n, int t) {
+		public DtypeImpl(String n, int t) {
 			nom = n;
 			taille = t;
 		}

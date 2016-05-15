@@ -33,7 +33,7 @@ syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX,
 syn params : Parametres for PARFS, PARFSX, ESX, ES, FX;
 inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R , A;
 
-inh htype: DtypeImpl for PTRS, FX;
+inh htype: DTYPE for PTRS, FX;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
 syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITES,PARFS,PARF,PARFSX, SIX;
 inh hdep : Emplacement for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS;     
@@ -290,7 +290,7 @@ do
   
 end
 }
-STYPE -> struct aco CHAMPS acf ;     --??????
+STYPE -> struct aco CHAMPS acf ;     --?????? Nader 
 CHAMPS -> ;
 -- un nom de champ commence par une minuscule
 CHAMPS -> CHAMP CHAMPS ;

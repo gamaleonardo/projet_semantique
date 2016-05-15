@@ -7,11 +7,11 @@ import mcs.type.*;
 import mcs.type.Parametres;
 
 public class INFOFONC implements INFO {
-	protected DTYPEImpl typeRetour;
+	protected DtypeImpl typeRetour;
 	protected Parametres params;
 	protected Emplacement empl;
 	
-	public DTYPEImpl getType() {
+	public DtypeImpl getType() {
 		return typeRetour;
 	}
 
@@ -23,7 +23,7 @@ public class INFOFONC implements INFO {
 		return this.getType().getTaille();
 	}
 
-	public INFOFONC(DTYPEImpl t, Emplacement e, Parametres p) {
+	public INFOFONC(DtypeImpl t, Emplacement e, Parametres p) {
 		typeRetour = t;
 		empl = e;
 		params = p;
