@@ -486,7 +486,7 @@ do
      E^code := A^code;
  elseif A^type.compareTo(AFFX^type) then
      E^type := A^type;
-     E^code := AFFX^code + A^code + E^tam.genWriteIndirectMem(A^type.getTaille());
+     E^code := AFFX^code  + E^tam.genWriteIndirectMem(A^type.getTaille()); ---- A^code
  else
       error(pas_meme_type, A^type); 
  end
@@ -526,7 +526,7 @@ end}
 AX -> OPREL R #r;
 #r{
 do
-    if R^type.compareTo(new DtypeImpl("entier",1)) ||  R^type.compareTo(new DtypeImpl("caractere",1))  then 
+    if R^type.compareTo(new DtypeImpl("entier",1)) || R^type.compareTo(new DtypeImpl("caractere",1))  then 
         AX^type:=R^type;
         AX^code := R^code + OPREL^code;
     else
@@ -544,37 +544,37 @@ do
 OPREL -> inf #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR ILss \n";
+    OPREL^code := "\tSUBR Lss \n";
 end}
 
 OPREL -> sup #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR IGtr \n";
+    OPREL^code := "\tSUBR Gtr \n";
 end}
 
 OPREL -> infeg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR ILeq \n";
+    OPREL^code := "\tSUBR Leq \n";
 end}
 
 OPREL -> supeg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR IGeq \n";
+    OPREL^code := "\tSUBR Geq \n";
 end}
 
 OPREL -> eg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR IEq \n";
+    OPREL^code := "\tSUBR Eq \n";
 end}
 
 OPREL -> neg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR INeq \n";
+    OPREL^code := "\tSUBR Neq \n";
 end}
 R ->  T  RX #r ;
 #r{
@@ -605,7 +605,7 @@ do
           error(types_diff, RX1^type);
        end 
     else
-        error(add_non_reels, T^type); 
+  error(add_non_reels, T^type); 
  end
  end}
 RX -> #r ;
@@ -618,13 +618,13 @@ do
 OPADD -> plus #gen;
 #gen{
 do
-    OPADD^code := "\tSUBR IAdd \n";
+    OPADD^code := "\tSUBR Add \n";
 end}
 
 OPADD -> moins #gen;
 #gen{
 do
-    OPADD^code := "\tSUBR ISub \n";
+    OPADD^code := "\tSUBR Sub \n";
 end}
 
 OPADD -> ou ;
