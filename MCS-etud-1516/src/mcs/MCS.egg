@@ -35,10 +35,11 @@ inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R , A;
 
 inh htype: DtypeImpl for PTRS, FX;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
-syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITES,PARFS,PARF,PARFSX, SIX;
-inh hdep : Emplacement for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS;     
-
-
+syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX,TYPE, CHAMPS, CHAMP;
+inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP;     
+inh types : DTYPE for CHAMPS, CHAMP;
+inh champs : DTYPE for CHAMPS, CHAMP;
+syn code : String for INSTS, INST, ENTITES, ENTITE;
 --terminals
 space separateur is  "[\r\n\t ]+";     
 space comm is  "\/\/[^\n]*\n";
@@ -116,6 +117,7 @@ do
      ENTITES^machine := machine;
    end
   ENTITES^tds := new TDS();
+  ENTITES^hdep:=0;
 end
 }
 -- ecrit le code dans un fichier
@@ -124,13 +126,31 @@ local
 do  --if faut chercher le main existe ou pas
     --if (ENTITES^std.chercherLocalement("main")= null) then
     -- error(main_nexiste_pas);
+    
       machine.writeCode(PROGRAMME^source.getFileName(),"; no code\n");  
 end
 }
-ENTITES -> ;
+ENTITES -> #gen;
+#gen {
+do
+ENTITES^dep:=ENTITES^hdep;
+ENTITES^code:="";
+end
+}
 
 
-ENTITES -> ENTITE ENTITES ;
+ENTITES -> ENTITE #dep ENTITES #gen;
+#dep{
+do
+ENTITES1^hdep:=ENTITE^dep;
+end}
+#gen{
+do
+ENTITES^dep:=ENTITES1^dep;
+ENTITES^code:=ENTITE^code + ENTITES1^code;
+end}
+
+
 -- definition d'un nom de type (commence par une majuscule)
 ENTITE -> typedef TYPE identc pv #tds ;
 -- definition d'une variable globale ou d'une fonction
@@ -142,13 +162,54 @@ ENTITE -> typedef TYPE identc pv #tds ;
   i := ENTITE^tds.chercherLocalement(identc^txt);
    if i /= null then
       error(ident_existe_deja, identc^txt);
-     end
-  
-  
- end }
-ENTITE ->  TYPE ident DECL ;
+   end
+   -- defintion d'un nouveau type
+   i:= new INFOTYPE(TYPE^type);
+   ENTITE^tds.inserer(identc^txt,i); 
+   ENTITE^dep:=ENTITE^hdep;
+   ENTITE^code:="";
+   
+     
+end }
+
+ENTITE ->  TYPE ident DECL #gen;
+
+#gen{
+  local 
+    i: INFO;
+  do
+  i := ENTITE^tds.chercherLocalement(ident^txt);
+   if i /= null then
+      error(ident_existe_deja, ident^txt);
+   end
+   
+   
+   
+   
+ -- i := ENTITE^tds.chercherLocalement(ident^txt);
+ --  if i /= null then
+ --       match DECL^type with FONCTION then
+ --                 error(ident_existe_deja, ident^txt); -- il s'agit d'une fonction donc traitement de la surcharge (nombre de paramétres différents avec le meme nom de fonction)
+ --       else
+ --                 error(ident_existe_deja, ident^txt);
+ --       end                                    
+ --  end
+end}
+
+
 -- Variable
-DECL -> pv;
+DECL -> pv #tds_type;
+
+#tds_type{
+local 
+ i:INFO;
+do
+
+
+
+end}
+
+
 DECL -> #tds FONCTION ;
 #tds{
 do
@@ -231,14 +292,16 @@ local
 do
     t := PARF^hparams.getParametre(ident^txt);
     if (t = null) then
-     iv := new INFOVAR(xxxxxx);
-    end
+       iv := new INFOVAR(TYPE^type,TYPE^dep);
+    else
+        error(parametre_existe_deja, ident^txt);
+    end  
  end
 }
-TYPE -> STYPE  #htype PTRS #type;
+TYPE -> STYPE  #htyp PTRS #type;
 -- type de base
 -- des * pour definir un pointeur
-#htype{
+#htyp{
 do 
   PTRS^htype:= STYPE^type;
 end}
@@ -290,11 +353,49 @@ do
   
 end
 }
-STYPE -> struct aco CHAMPS acf ;     --??????
+STYPE -> struct #1 aco CHAMPS acf #2  ;
+global
+lt : LTYPES;
+#1{
+do
+    lt := new LTYPES();    
+    CHAMPS^champs :=lt;
+    CHAMPS^hdep:=0; 
+end
+}
+#2{
+do
+    STYPE^type := new STRUCT(lt);
+    -- a completer generation de code
+end
+}
+ 
 CHAMPS -> ;
 -- un nom de champ commence par une minuscule
-CHAMPS -> CHAMP CHAMPS ;
-CHAMP -> TYPE ident pv;
+CHAMPS -> CHAMP #4 CHAMPS ;
+#4{
+do
+CHAMPS1^hdep:=CHAMP^dep;
+end
+}
+CHAMP -> TYPE ident pv #3;
+#3{
+local
+it:CHAMP;
+do
+        it:=CHAMP^champs.chercher(ident^txt);
+        if (it/=null) then
+           error(pram_exist,ident^txt);        
+        else
+        it:= new CHAMP(ident^txt, TYPE^type, CHAMP^hdep);
+        CHAMP^champs.inserer(it);
+        CHAMP^dep:= CHAMP^hdep + TYPE^type.getTaille();     
+        end
+    -- a completer generation de code
+end
+}
+
+
 
 -- corps de fonction et bloc d'instructions
 BLOC ->  aco #tds INSTS #type acf ;
@@ -311,18 +412,18 @@ do
   BLOC^dep:=INSTS^dep;
 end}
 
-INSTS -> #type  ;
-#type{
+INSTS -> #gen  ;
+#gen{
 do 
-  INSTS^type:=new DtypeImpl("void",0);
+  INSTS^code:="";
   INSTS^dep:=INSTS^hdep;
 end}
 
-INSTS -> #htype INST #hdep INSTS #type  ;
+INSTS -> #htype INST #hdep INSTS #gen  ;
 -- declaration de variable locale avec ou sans init 
 #htype{
 do
-INST^htyp:=INSTS^htyp;
+INST^htyp:=INSTS^htyp;    -- inutile car la transmission se fait automatiquement (MA)
 INSTS1^htyp:=INSTS^htyp;
 INST^hdep:=INSTS^hdep;
 end}
@@ -330,7 +431,7 @@ end}
 do
   INSTS1^hdep:=INST^dep;
 end}
-#type{
+#gen{
 local
     s : STRING;
 do
@@ -341,6 +442,10 @@ do
         INSTS^type := INST^type; --type de premier INST non void rencontre
     end
     INSTS^dep:=INSTS1^dep;
+    INSTS^code:=INST^code + INSTS1^code;
+    
+    
+    
 end}
 
 INST ->  TYPE ident AFFX pv ;
@@ -485,7 +590,7 @@ ESX -> virg E ESX ;
 
 ------------- inline asm ----------------
 -- peut être utile pour implanter des sous-programmes
--- directement en assembleur TAM.
+-- directement en assembleur T+++++++AM.
 ENTITE ->   asm #tds ASM#gen; 
 #tds {
 do 
