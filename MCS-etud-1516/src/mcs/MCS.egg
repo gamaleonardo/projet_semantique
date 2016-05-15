@@ -18,8 +18,21 @@ inh machine : IMachine for
 --       , BASE, DEFS, DEF
 --         -- fin extension MCS
          ;
+inh tam : IMachine for
+         PROGRAMME, ENTITES, FONCTION, INST, BLOC, INSTS, SIX,
+         PARFS, PARF, PARFSX, ES, ESX, TYPE, STYPE, PTRS,
+         E, AFFX, A, AX, R, RX, T, TX, F,FX
+         ;
 -- ces attributs permettent de recuperer les instructions du code ASM inline       
 syn code_asm : STRING for ASM;
+syn code : STRING for 
+         ENTITES, FONCTION, INST, BLOC, INSTS, SIX,
+         TYPE, STYPE, PTRS,
+         ES, ESX, 
+         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN
+         ;
+inh hcode : STRING for PTRS;
+
 -- la TDS courante
 inh tds_asm : TDS for ASM;
 
@@ -28,10 +41,11 @@ inh tds : TDS for
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX
          ;
+
 syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
 syn params : Parametres for PARFS, PARFSX, ESX, ES, FX;
-inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R , A;
+inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R,A ;
 
 inh htype: DTYPE for PTRS, FX;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
@@ -109,6 +123,9 @@ global
 #init {
 local
 do
+  
+   ENTITES^tam := new MTAM();
+   ENTITES^hdep:=new Emplacement(0, new Register("SB",1));  
    machine := PROGRAMME^source.getMachine();
    if machine = null then
      error(NO_MACH, PROGRAMME^source.getMachName());
@@ -121,14 +138,24 @@ end
 -- ecrit le code dans un fichier
 #gen {
 local
-do  --if faut chercher le main existe ou pas
-    --if (ENTITES^std.chercherLocalement("main")= null) then
-    -- error(main_nexiste_pas);
-      machine.writeCode(PROGRAMME^source.getFileName(),"; no code\n");  
+    tam : IMachine;
+do
+   tam := new MTAM();
+   --if (ENTITES^tds2.chercherLocalement("main")= null) then
+     --   error(no_main);
+   --else
+        machine.writeCode(PROGRAMME^source.getFileName(), tam.genCall("main")+ENTITES^code);
+  -- end 
 end
 }
-ENTITES -> ;
 
+ENTITES -> #dep;
+#dep{
+do
+    ENTITES ^dep:=ENTITES^hdep;
+    ENTITES^code := "";
+ end}
+ 
 
 ENTITES -> ENTITE ENTITES ;
 -- definition d'un nom de type (commence par une majuscule)
@@ -156,7 +183,11 @@ do
 end
 }
 -- Fonction
-FONCTION ->  paro PARFS parf  BLOC #tdstype ;
+FONCTION ->  paro PARFS #init parf  BLOC #tdstype ;
+#init{
+do
+ --   FONCTION^code := FONCTION^tam.genReserve(xxxx); --TYPE^type.getTaille()
+end}
 #tdstype{
 local
     i:INFO;
@@ -223,7 +254,7 @@ end
 }
 
 PARF ->  TYPE ident #tdstype ;
--- les types (de base, noms, struct et pointeurs)
+
 #tdstype{
 local
     t : DTYPE;
@@ -235,42 +266,58 @@ do
     end
  end
 }
+-- les types (de base, noms, struct et pointeurs)
 TYPE -> STYPE  #htype PTRS #type;
--- type de base
--- des * pour definir un pointeur
 #htype{
 do 
   PTRS^htype:= STYPE^type;
+  PTRS^hcode := "";
 end}
 #type {
 do
   TYPE^type := PTRS^type;
+   if (PTRS^code="")then
+     TYPE^code := STYPE^code;
+  else
+     TYPE^code := PTRS^code;
+  end
 end}
 
+-- type de base
+-- des * pour definir un pointeur
 PTRS -> #type;
 #type{
 do
     PTRS^type := PTRS^htype;
+    --PTRS^code := PTRS^hcode + ????
 end}
 
-PTRS -> mult PTRS #type;
--- types de base
+PTRS -> mult #gencode PTRS #type;
+#gencode {
+do
+     -- il faut verifié si les params sont déclaré : il faut ajouté un attribut hérité??????
+     PTRS1^hcode := PTRS^hcode+PTRS^tam.genMalloc(1);
+
+end}
 #type {
 do
   PTRS^type := new POINTEUR(PTRS1^type);
   --PTRS^code := PTRS1^code;
 end}
 
+-- types de base
 STYPE-> void  #type ;
 #type{
 do
     STYPE^type := new DtypeImpl("void", 0);
+    STYPE^code := STYPE^tam.genXXXXXX(1); 
 end
 }
 STYPE-> int #type;
 #type{
 do
     STYPE^type := new DtypeImpl("entier", 1);
+    STYPE^code := STYPE^tam.genXXXXXX(1);
 end
 }
 STYPE-> char #type;
@@ -278,6 +325,7 @@ STYPE-> char #type;
 #type{
 do
     STYPE^type := new DtypeImpl("caractere", 1);
+    STYPE^code := STYPE^tam.genXXXX(1);
   
 end
 }
@@ -287,6 +335,7 @@ STYPE -> identc #type;
 #type{
 do
     STYPE^type := new DtypeImpl("caracteretc", 1);
+    STYPE^code := STYPE^tam.genXXXX(1);
   
 end
 }
@@ -358,12 +407,12 @@ do
  if ~(E^type.compareTo(new DtypeImpl("void",0))) then
     error(pas_instruction, E^type);
  end
+ INST^code := E^code;
  INST^dep := new Emplacement(INST^hdep.getDep() + E^type.getTaille(), INST^hdep.getReg());
 end}
 
 -- bloc d'instructions
 INST -> #tds BLOC #type  ;
--- conditionnelle
 #tds{
 do
     BLOC^tds := new TDS(INST^tds);
@@ -374,8 +423,9 @@ end
 do
  INST^type := BLOC^type;
  INST^dep:=BLOC^dep;
+ INST^code := BLOC^code;
 end}
-
+-- conditionnelle
 INST ->   si paro E parf #tds BLOC SIX ;
 #tds{
 do
@@ -404,11 +454,21 @@ SIX -> #type;
 do
      SIX^type := new DtypeImpl ("void",0);
      SIX^dep:=SIX^hdep;
+     SIX^code := "";
 end}
 
 -- retour de fonction
-INST ->  retour  E pv ;
-
+INST ->  retour  #hparam E pv #r ;
+#hparam{
+do 
+    E^hparams:=new Parametres();
+end}
+#r{
+do
+     INST^type := E^type;
+     INST^dep:=new Emplacement(INST^hdep.getDep()+E^type.getTaille(), INST^hdep.getReg());
+     INST^code := E^code;   -- code : empiler E 
+end}
 
 -- les expressions -------------
 -----------------------------------------------------------------------
@@ -418,28 +478,155 @@ INST ->  retour  E pv ;
 -- T = expression figurant dans une expression additive (TERME)
 -- F = expression figurant dans une expression multiplicative (FACTEUR)
 -----------------------------------------------------------------------
-E ->   A  AFFX ;
+E ->   A  AFFX #r ;
+#r{
+do
+ if AFFX^type.compareTo(new DtypeImpl("void", 0)) then
+     E^type := A^type;  
+     E^code := A^code;
+ elseif A^type.compareTo(AFFX^type) then
+     E^type := A^type;
+     E^code := AFFX^code + A^code + E^tam.genWriteIndirectMem(A^type.getTaille());
+ else
+      error(pas_meme_type, A^type); 
+ end
+ 
+end}
+
 -- affectation
-AFFX -> affect  A  ;
-AFFX -> ;
+AFFX -> affect A #r;
+#r{
+do
+    AFFX^type:=A^type;
+    AFFX^code := A^code;
+end}
+
+AFFX -> #r;
+#r{
+do
+    AFFX^type:=new DtypeImpl("void",0);
+    AFFX^code := "";
+end}
+
 -- relation
-A ->   R AX  ;
-AX -> OPREL R;
-AX ->  ;
+A ->   R AX #r;
+#r{
+do
+ if AX^type.compareTo(new DtypeImpl("void", 0)) then
+     A^type := R^type;   
+     A^code := R^code;
+ elseif R^type.compareTo(AX^type) then
+     A^type := R^type;
+     A^code := R^code + AX^code;
+ else
+      error(pas_meme_type, R^type);
+ end
+end}
+
+AX -> OPREL R #r;
+#r{
+do
+    if R^type.compareTo(new DtypeImpl("entier",1)) ||  R^type.compareTo(new DtypeImpl("caractere",1))  then 
+        AX^type:=R^type;
+        AX^code := R^code + OPREL^code;
+    else
+        error(pas_reel, R^type); 
+ end
+ end}
+AX -> #r ;
+#r{
+do
+    AX^type:=new DtypeImpl("void",0);
+    AX^code := "";
+ end} 
+ 
 -- operateurs relationnels
-OPREL -> inf ;
-OPREL -> sup ;
-OPREL -> infeg ;
-OPREL -> supeg ;
-OPREL -> eg ;
-OPREL -> neg ;
-R ->  T  RX ;
+OPREL -> inf #gen;
+#gen{
+do
+    OPREL^code := "\tSUBR ILss \n";
+end}
+
+OPREL -> sup #gen;
+#gen{
+do
+    OPREL^code := "\tSUBR IGtr \n";
+end}
+
+OPREL -> infeg #gen;
+#gen{
+do
+    OPREL^code := "\tSUBR ILeq \n";
+end}
+
+OPREL -> supeg #gen;
+#gen{
+do
+    OPREL^code := "\tSUBR IGeq \n";
+end}
+
+OPREL -> eg #gen;
+#gen{
+do
+    OPREL^code := "\tSUBR IEq \n";
+end}
+
+OPREL -> neg #gen;
+#gen{
+do
+    OPREL^code := "\tSUBR INeq \n";
+end}
+R ->  T  RX #r ;
+#r{
+do
+ if RX^type.compareTo(new DtypeImpl("void", 0)) then
+     R^type := T^type; 
+     R^code := T^code ;
+ elseif RX^type.compareTo(T^type) then
+     R^type := T^type;
+     R^code := T^code + RX^code;
+     
+ else
+      error(add_type_diff, T^type); 
+ end
+end}
 -- additions ...
-RX ->   OPADD  T RX  ;
-RX -> ;
+RX ->   OPADD  T RX #r ;
+#r{
+do
+    if T^type.compareTo(new DtypeImpl("entier",1))  then   
+       if RX1^type.compareTo(new DtypeImpl("void", 0)) then
+          RX^type := T^type;  
+          RX^code := T^code + OPADD^code;
+       elseif RX1^type.compareTo(T^type) then
+          RX^type := T^type;
+          RX^code := T^code + OPADD^code + RX1^code;
+        else
+          error(types_diff, RX1^type);
+       end 
+    else
+        error(add_non_reels, T^type); 
+ end
+ end}
+RX -> #r ;
+#r{
+do
+    RX^type:=new DtypeImpl("void",0);
+    RX^code := "";
+ end}
 -- operateurs additifs
-OPADD -> plus ;
-OPADD -> moins ;
+OPADD -> plus #gen;
+#gen{
+do
+    OPADD^code := "\tSUBR IAdd \n";
+end}
+
+OPADD -> moins #gen;
+#gen{
+do
+    OPADD^code := "\tSUBR ISub \n";
+end}
+
 OPADD -> ou ;
 -- multiplication, ...
 T ->  F  TX  ;
