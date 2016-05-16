@@ -29,7 +29,7 @@ syn code : STRING for
          ENTITES, FONCTION, INST, BLOC, INSTS, SIX,
          TYPE, STYPE, PTRS,
          ES, ESX, 
-         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN
+         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F
          ;
 inh hcode : STRING for PTRS;
 
@@ -186,7 +186,7 @@ end
 FONCTION ->  paro PARFS #init parf  BLOC #tdstype ;
 #init{
 do
- --   FONCTION^code := FONCTION^tam.genReserve(xxxx); --TYPE^type.getTaille()
+ --   FONCTION^code := FONCTION^tam.genXXXX(xxxx); --TYPE^type.getTaille()
 end}
 #tdstype{
 local
@@ -627,16 +627,75 @@ do
     OPADD^code := "\tSUBR Sub \n";
 end}
 
-OPADD -> ou ;
+OPADD -> ou #gen;
+#gen{
+do
+    OPADD^code := "\tSUBR Or \n";
+end}
+
 -- multiplication, ...
-T ->  F  TX  ;
-TX ->   OPMUL  F TX  ;
-TX ->  ;
+T ->  F  TX #r ;
+#r{
+do
+ if TX^type.compareTo(new DtypeImpl("void", 0)) then
+     T^type := F^type;  
+     T^code := F^code ;
+ elseif TX^type.compareTo(F^type) then
+     T^type := F^type;
+     T^code := F^code + TX^code;
+ else
+      error(mulTypes_diff, F^type); 
+ end
+end}
+TX ->   OPMUL   #hp F TX #r ;
+#hp{
+do
+  F^hparams:=new Parametres();
+end
+}
+#r{
+do
+    if F^type.compareTo(new DtypeImpl("entier",1)) then
+       if TX1^type.compareTo(new DtypeImpl("void", 0)) then
+          TX^type := F^type;  
+          TX^code := F^code+ OPMUL^code;
+       elseif TX1^type.compareTo(F^type) then
+          TX^type := F^type;
+          TX^code := F^code+ OPMUL^code + TX1^code;
+       else
+          error(mult_types_diff, TX1^type); 
+       end 
+    else
+        error(pas_reel, F^type); 
+ end
+ end}
+TX ->  #r ;
+#r{
+do
+    TX^type:=new DtypeImpl("void",0);
+    TX^code := "";
+ end}
 -- operateurs multiplicatifs
-OPMUL -> mult ;
-OPMUL -> div ;
-OPMUL -> mod ;
-OPMUL -> et ;
+OPMUL -> mult #gen ;
+#gen{
+do
+    OPMUL^code := "\tSUBR Mul \n";
+end}
+OPMUL -> div #gen ;
+#gen{
+do
+    OPMUL^code := "\tSUBR Div \n";
+end}
+OPMUL -> mod #gen ;
+#gen{
+do
+    OPMUL^code := "\tSUBR Mod \n";
+end}
+OPMUL -> et #gen ;
+#gen{
+do
+    OPMUL^code := "\tSUBR And \n";
+end}
 -- expressions de base
 -- Constante entiere
 F -> entier   ;
