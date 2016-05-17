@@ -14,13 +14,18 @@ public class INFOVAR implements INFO {
 	 * Le type de la variable
 	 */
 	protected DTYPE type;
+	private int dep;
+
+	public int getDep() {
+		return dep;
+	}
 
 	public DTYPE getType() {
 		return type;
 	}
 
 	/**
-	 * Represnete un emplacement memoire : depend de la machine
+	 * Represente un emplacement memoire : depend de la machine
 	 * 
 	 */
 	protected Emplacement empl;

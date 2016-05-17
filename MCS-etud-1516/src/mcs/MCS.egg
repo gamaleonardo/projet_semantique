@@ -302,7 +302,7 @@ end}
 #type {
 do
   PTRS^type := new POINTEUR(PTRS1^type);
-  --PTRS^code := PTRS1^code;
+  PTRS^code := PTRS1^code;
 end}
 
 -- types de base
@@ -597,10 +597,10 @@ do
     if T^type.compareTo(new DtypeImpl("entier",1))  then   
        if RX1^type.compareTo(new DtypeImpl("void", 0)) then
           RX^type := T^type;  
-          RX^code := T^code + OPADD^code;
+          RX^code := T^code ; --+ OPADD^code
        elseif RX1^type.compareTo(T^type) then
           RX^type := T^type;
-          RX^code := T^code + OPADD^code + RX1^code;
+          RX^code := T^code + RX1^code + OPADD^code;
         else
           error(types_diff, RX1^type);
        end 
@@ -658,10 +658,10 @@ do
     if F^type.compareTo(new DtypeImpl("entier",1)) then
        if TX1^type.compareTo(new DtypeImpl("void", 0)) then
           TX^type := F^type;  
-          TX^code := F^code+ OPMUL^code;
+          TX^code := F^code; --+ OPMUL^code
        elseif TX1^type.compareTo(F^type) then
           TX^type := F^type;
-          TX^code := F^code+ OPMUL^code + TX1^code;
+          TX^code := F^code +  TX1^code + OPMUL^code;
        else
           error(mult_types_diff, TX1^type); 
        end 
