@@ -26,7 +26,7 @@ inh tam : IMachine for
 -- ces attributs permettent de recuperer les instructions du code ASM inline       
 syn code_asm : STRING for ASM;
 syn code : STRING for 
-         ENTITES, FONCTION, INST, BLOC, INSTS, SIX,
+         ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          TYPE, STYPE, PTRS,
          ES, ESX, 
          E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F
@@ -49,8 +49,8 @@ inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R,A ;
 
 inh htype: DTYPE for PTRS, FX;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
-syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITES,PARFS,PARF,PARFSX, SIX;
-inh hdep : Emplacement for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS;     
+syn dep :   INTEGER for INST, INSTS, BLOC, FONCTION,ENTITES,PARFS,PARF,PARFSX, SIX;
+inh hdep : INTEGER for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS;     
 
 
 --terminals
@@ -120,6 +120,7 @@ PROGRAMME -> #init ENTITES #gen;
 global
    machine : IMachine;
 -- transmission de la machine cible  (choisie par l'option -m au lancement) 
+    tds : TDS;
 #init {
 local
 do
@@ -132,7 +133,8 @@ do
    else
      ENTITES^machine := machine;
    end
-  ENTITES^tds := new TDS();
+  tds := new TDS();
+  ENTITES^tds := tds;
 end
 }
 -- ecrit le code dans un fichier
@@ -141,11 +143,11 @@ local
     tam : IMachine;
 do
    tam := new MTAM();
-   --if (ENTITES^tds2.chercherLocalement("main")= null) then
-     --   error(no_main);
-   --else
+   if (tds.chercherLocalement("main")= null) then
+       error(no_main);
+   else
         machine.writeCode(PROGRAMME^source.getFileName(), tam.genCall("main")+ENTITES^code);
-  -- end 
+  end 
 end
 }
 
@@ -310,14 +312,14 @@ STYPE-> void  #type ;
 #type{
 do
     STYPE^type := new DtypeImpl("void", 0);
-    STYPE^code := STYPE^tam.genXXXXXX(1); 
+    STYPE^code := ""; --STYPE^tam.genXXXXXX(1); 
 end
 }
 STYPE-> int #type;
 #type{
 do
     STYPE^type := new DtypeImpl("entier", 1);
-    STYPE^code := STYPE^tam.genXXXXXX(1);
+    STYPE^code := ""; --STYPE^tam.genXXXXXX(1);
 end
 }
 STYPE-> char #type;
@@ -325,7 +327,7 @@ STYPE-> char #type;
 #type{
 do
     STYPE^type := new DtypeImpl("caractere", 1);
-    STYPE^code := STYPE^tam.genXXXX(1);
+    STYPE^code := ""; --STYPE^tam.genXXXX(1);
   
 end
 }
@@ -698,25 +700,75 @@ do
 end}
 -- expressions de base
 -- Constante entiere
-F -> entier   ;
+F -> entier #type;
+#type{
+do
+   F^type := new DtypeImpl("entier", 1);
+   F^code := F^tam.genCst(entier^txt);
+end
+}  
 -- Constante chaine
-F -> chaine ;
+F -> chaine #type;
+#type{
+do
+   F^type := new DtypeImpl("entier", 1);
+   F^code := F^tam.genCst(chaine^txt); 
+end
+}  
 -- Constante caractere
-F -> caractere ;
+F -> caractere #type;
+#type{
+do
+   F^type := new DtypeImpl("entier", 1);
+   F^code := F^tam.genCst(caractere^txt); 
+end
+}  
 -- expression unaire
-F ->  OPUN  F  ;
+F ->  OPUN  F  #gen;
+#gen{
+do
+    F^type := F1^type;
+    F^code := F1^code + OPUN^code;
+end
+}
 -- operateurs unaires
-OPUN -> plus ;
-OPUN -> moins ;
-OPUN -> non;
+OPUN -> plus #gen;
+#gen{
+do
+    OPUN^code  := "\tSUBR Add \n";
+end
+}
+OPUN -> moins #gen;
+#gen{
+do
+    OPUN^code  := "\tSUBR Sub \n";
+end
+}
+OPUN -> non#gen;
+#gen{
+do
+    OPUN^code  := "\tSUBR Not \n";
+end
+}
 -- pointeur NULL
-F -> null  ;
+F -> null  #gen;
+#gen{
+do
+    F^type := new DtypeImpl("void",1);
+end
+}
 -- expression parenthesee
 F ->  paro E parf FX ;
 F ->  paro TYPE parf  F ;
 F -> mult F ;
 F -> ident FX ;
-FX -> ;
+FX ->#gen ;
+#gen{
+do
+FX^code := 
+end
+
+}
 -- acces champ
 FX ->   pt  ident FX ;
 -- acces champ pointeur
@@ -737,12 +789,13 @@ ENTITE ->   asm #tds ASM#gen;
 do 
   -- A faire : Remplacer 'null' par la table courante pour que
   -- le code  ASM puisse acceder aux variables de MC ou MCS
-  ASM^tds_asm := null; 
+  ASM^tds_asm := ENTITE^tds; 
 end
 }
 #gen {
 do
   -- On recupere le code assembleur 'inline' dans : ASM^code_asm ;
+  ENTITE^code := ASM^code_asm;
 end
 }
 
