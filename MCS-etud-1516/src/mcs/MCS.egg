@@ -29,9 +29,9 @@ syn code : STRING for
          ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          TYPE, STYPE, PTRS,
          ES, ESX, 
-         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F
+         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F 
          ;
-inh hcode : STRING for PTRS;
+inh hcode : STRING for PTRS, F, FX;
 
 -- la TDS courante
 inh tds_asm : TDS for ASM;
@@ -47,11 +47,15 @@ syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX,
 syn params : Parametres for PARFS, PARFSX, ESX, ES, FX;
 inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R,A ;
 
-inh htype: DTYPE for PTRS, FX;
+inh htype: DTYPE for PTRS, F, FX;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
 syn dep :   INTEGER for INST, INSTS, BLOC, FONCTION,ENTITES,PARFS,PARF,PARFSX, SIX;
-inh hdep : INTEGER for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS;     
+inh hdep : INTEGER for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, PTRS;     
 
+syn code_est_adresse : BOOLEAN for  F, FX ;
+inh hcode_est_adresse : BOOLEAN for FX ;
+syn adresse : INTEGER for  F, FX ;
+inh hadresse : INTEGER for F, FX ;
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -705,6 +709,8 @@ F -> entier #type;
 do
    F^type := new DtypeImpl("entier", 1);
    F^code := F^tam.genCst(entier^txt);
+   F^code_est_adresse := false;
+   F^adresse := -1;
 end
 }  
 -- Constante chaine
@@ -713,6 +719,8 @@ F -> chaine #type;
 do
    F^type := new DtypeImpl("entier", 1);
    F^code := F^tam.genCst(chaine^txt); 
+   F^code_est_adresse := false;
+   F^adresse := -1;
 end
 }  
 -- Constante caractere
@@ -721,6 +729,8 @@ F -> caractere #type;
 do
    F^type := new DtypeImpl("entier", 1);
    F^code := F^tam.genCst(caractere^txt); 
+   F^code_est_adresse := false;
+   F^adresse := -1;
 end
 }  
 -- expression unaire
@@ -729,6 +739,8 @@ F ->  OPUN  F  #gen;
 do
     F^type := F1^type;
     F^code := F1^code + OPUN^code;
+    F^code_est_adresse := false;
+    F^adresse := -1;
 end
 }
 -- operateurs unaires
@@ -754,23 +766,116 @@ end
 F -> null  #gen;
 #gen{
 do
-    F^type := new DtypeImpl("void",1);
+   F^type := new DtypeImpl("void",1);
+   F^code_est_adresse := false;
+   F^adresse := -1;
+   F^code := "";
 end
 }
 -- expression parenthesee
-F ->  paro E parf FX ;
-F ->  paro TYPE parf  F ;
-F -> mult F ;
-F -> ident FX ;
-FX ->#gen ;
+--F ->  paro E parf FX ;
+F ->  paro TYPE parf  F #gen;
 #gen{
 do
-FX^code := 
+    if F1^type.compareTo(TYPE^type) then
+        F^type := TYPE^type;&
+        F^code_est_adresse := F1^code_est_adresse ;
+        F^adresse := F1^adresse;
+        F^code := F1^code;
+    else
+        error(Wrong_Type, TYPE^type, F1^type);
+    end
 end
+}
+F -> mult #a  F #gen;
+#gen {
+do
+  F^type := F1^type;
+  F^code_est_adresse := true;
+  F^code :=  F1^code;
+  F^adresse := F1^adresse;
+end
+}
 
+#a {
+local
+p : POINTEUR ;
+code : STRING;
+do
+  match F^htype
+  with POINTEUR then
+    p := F^htype;
+    F1^htype := p.getType();
+    -- on lit le contenu
+    --FX1^hcode_est_adresse := FX^hcode_est_adresse;
+    code := F^tam.genComment("acces zone pointee : ");
+    if F^hadresse != -1 then
+      code := code + F^tam.genReadMem(F^hadresse, p.getTaille());
+    else
+      code := code + F^hcode + F^tam.genReadIndirectMem(1);
+    end
+    F1^hcode := code ;
+    -- A partir de la, l'adresse n'est plus gerable             
+    F1^hadresse := -1;
+   else
+    error(B_11, F^htype);
+  end
+
+end
+}
+F -> ident #h FX ;
+#h {
+local
+ s : STRUCT ;
+ c : CHAMP;
+ lc : LCHAMPS;
+do
+  match FX^htype
+  with STRUCT then
+    s := FX^htype;
+    lc := s.getChamps();
+    c := lc.chercher(ident^txt);
+    if c = nil then
+      error(B_10, ident^txt) ;
+    else
+      FX1^htype := c.getType();
+      --FX1^hcode_est_adresse := FX^hcode_est_adresse;
+      if FX^hadresse = -1 then
+        FX1^hadresse := -1;
+        FX1^hcode :=FX^hcode + FX^tam.genComment("acces champ : " + ident^txt) +
+                  FX^tam.genAdrField(c.getDep())  ;
+      else
+        FX1^hadresse := FX^hadresse + c.getDep();
+        FX1^hcode := FX^tam.genComment("acces champ : " + ident^txt);
+      end
+    end    
+  else
+    error(B_09, FX^htype); 
+  end
+
+end
+}
+FX ->#gen ;
+#gen {
+do
+  FX^type := FX^htype;
+  FX^code_est_adresse := FX^hcode_est_adresse;
+  FX^code := FX^hcode;
+  FX^adresse := FX^hadresse;
+end
 }
 -- acces champ
-FX ->   pt  ident FX ;
+FX ->   pt #h FX  #gen;
+#gen {
+do
+  FX^type := FX1^type;
+  FX^code_est_adresse := true;
+  FX^code :=FX1^code;
+  FX^adresse := FX1^adresse;
+end
+}
+
+
 -- acces champ pointeur
 FX ->   arrow  ident FX ;
 -- appel de sous-programme
