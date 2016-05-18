@@ -3,21 +3,21 @@ package mcs.type;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Parametres {
-	protected HashMap<String, DtypeImpl> table;
+public class PARAMETRES {
+	protected HashMap<String, DTYPEImpl> table;
 	protected ArrayList<String> ordreParam;
 
-	public Parametres(){
-		table = new HashMap<String, DtypeImpl>();
+	public PARAMETRES(){
+		table = new HashMap<String, DTYPEImpl>();
 		ordreParam = new ArrayList<String>();
 	}
 
-	public Parametres(HashMap<String, DtypeImpl> t,ArrayList<String> op){
+	public PARAMETRES(HashMap<String, DTYPEImpl> t,ArrayList<String> op){
 		table = t;
 		ordreParam = op;
 	}
 
-	public DtypeImpl getParametre(String ident){
+	public DTYPEImpl getParametre(String ident){
 		return table.get(ident);
 	}
 	public ArrayList<String> getordreParam(){
@@ -28,7 +28,7 @@ public class Parametres {
 		ordreParam.add(ident);
 	}
 
-	public void ajouterParametre(String ident, DtypeImpl type){
+	public void ajouterParametre(String ident, DTYPEImpl type){
 		table.put(ident, type);
 		ordreParam.add(ident);
 	}

@@ -42,15 +42,18 @@ inh tds : TDS for
          E, AFFX, A, AX, R, RX, T, TX, F,FX
          ;
 
-syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
+syn type : DTYPEImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
-syn params : Parametres for PARFS, PARFSX, ESX, ES, FX;
-inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F , T , R,A ;
+syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
+inh hparams: PARAMETRES for PARF, PARFSX, E, ES, ESX, FX, F , T , R,A ;
 
 inh htype: DTYPE for PTRS, F, FX;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
+
+
+
 syn dep :   INTEGER for INST, INSTS, BLOC, FONCTION,ENTITES,PARFS,PARF,PARFSX, SIX;
-inh hdep : INTEGER for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, PTRS,TYPE;     
+inh hdep : INTEGER for INST, INSTS, BLOC, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, PTRS;     
 
 syn code_est_adresse : BOOLEAN for  F, FX ;
 inh hcode_est_adresse : BOOLEAN for FX ;
@@ -208,19 +211,19 @@ do
      -- FONCTION^tds.inserer(ident^txt,  ifonc);
       --end
  end}
--- parametres de fonctions
+-- PARAMETRES de fonctions
 PARFS ->#param;
 #param{
 do
-    PARFS^params := new Parametres();
+    PARFS^params := new PARAMETRES();
     PARFS^dep:=PARFS^hdep;
 end}
 PARFS -> #init PARF #hdep PARFSX #fin;
 #init{
 local
-    p : Parametres;
+    p : PARAMETRES;
 do
-    p := new Parametres();
+    p := new PARAMETRES();
     PARF^hparams := p;
     PARFSX^hparams := p;
     PARF^hdep:=PARFS^hdep;
@@ -315,14 +318,14 @@ end}
 STYPE-> void  #type ;
 #type{
 do
-    STYPE^type := new DtypeImpl("void", 0);
+    STYPE^type := new DTYPEImpl("void", 0);
     STYPE^code := ""; --STYPE^tam.genXXXXXX(1); 
 end
 }
 STYPE-> int #type;
 #type{
 do
-    STYPE^type := new DtypeImpl("entier", 1);
+    STYPE^type := new DTYPEImpl("entier", 1);
     STYPE^code := ""; --STYPE^tam.genXXXXXX(1);
 end
 }
@@ -330,7 +333,7 @@ STYPE-> char #type;
 -- nom de type (commence par une majuscule)
 #type{
 do
-    STYPE^type := new DtypeImpl("caractere", 1);
+    STYPE^type := new DTYPEImpl("caractere", 1);
     STYPE^code := ""; --STYPE^tam.genXXXX(1);
   
 end
@@ -340,7 +343,7 @@ STYPE -> identc #type;
 -- et struct
 #type{
 do
-    STYPE^type := new DtypeImpl("caracteretc", 1);
+    STYPE^type := new DTYPEImpl("caracteretc", 1);
     STYPE^code := STYPE^tam.genXXXX(1);
   
 end
@@ -369,7 +372,7 @@ end}
 INSTS -> #type  ;
 #type{
 do 
-  INSTS^type:=new DtypeImpl("void",0);
+  INSTS^type:=new DTYPEImpl("void",0);
   INSTS^dep:=INSTS^hdep;
 end}
 
@@ -403,14 +406,14 @@ INST ->  TYPE ident AFFX pv ;
 INST -> #params E pv #r ;
 #params{
 do
-  E^hparams:=new Parametres();
+  E^hparams:=new PARAMETRES();
   INST^dep:=INST^hdep;
  
  end}
 #r{
 do
- INST^type := new DtypeImpl("void", 0);
- if ~(E^type.compareTo(new DtypeImpl("void",0))) then
+ INST^type := new DTYPEImpl("void", 0);
+ if ~(E^type.compareTo(new DTYPEImpl("void",0))) then
     error(pas_instruction, E^type);
  end
  INST^code := E^code;
@@ -458,7 +461,7 @@ end}
 SIX -> #type;
 #type{
 do
-     SIX^type := new DtypeImpl ("void",0);
+     SIX^type := new DTYPEImpl ("void",0);
      SIX^dep:=SIX^hdep;
      SIX^code := "";
 end}
@@ -467,13 +470,13 @@ end}
 INST ->  retour  #hparam E pv #r ;
 #hparam{
 do 
-    E^hparams:=new Parametres();
+    E^hparams:=new PARAMETRES();
 end}
 #r{
 do
      INST^type := E^type;
      INST^dep:=new Emplacement(INST^hdep.getDep()+E^type.getTaille(), INST^hdep.getReg());
-     INST^code := E^code;   -- code : empiler E 
+     INST^code := E^code + INST^tam.genRetour();   -- code : empiler E 
 end}
 
 -- les expressions -------------
@@ -487,7 +490,7 @@ end}
 E ->   A  AFFX #r ;
 #r{
 do
- if AFFX^type.compareTo(new DtypeImpl("void", 0)) then
+ if AFFX^type.compareTo(new DTYPEImpl("void", 0)) then
      E^type := A^type;  
      E^code := A^code;
  elseif A^type.compareTo(AFFX^type) then
@@ -510,7 +513,7 @@ end}
 AFFX -> #r;
 #r{
 do
-    AFFX^type:=new DtypeImpl("void",0);
+    AFFX^type:=new DTYPEImpl("void",0);
     AFFX^code := "";
 end}
 
@@ -518,7 +521,7 @@ end}
 A ->   R AX #r;
 #r{
 do
- if AX^type.compareTo(new DtypeImpl("void", 0)) then
+ if AX^type.compareTo(new DTYPEImpl("void", 0)) then
      A^type := R^type;   
      A^code := R^code;
  elseif R^type.compareTo(AX^type) then
@@ -532,7 +535,7 @@ end}
 AX -> OPREL R #r;
 #r{
 do
-    if R^type.compareTo(new DtypeImpl("entier",1)) || R^type.compareTo(new DtypeImpl("caractere",1))  then 
+    if R^type.compareTo(new DTYPEImpl("entier",1)) || R^type.compareTo(new DTYPEImpl("caractere",1))  then 
         AX^type:=R^type;
         AX^code := R^code + OPREL^code;
     else
@@ -542,7 +545,7 @@ do
 AX -> #r ;
 #r{
 do
-    AX^type:=new DtypeImpl("void",0);
+    AX^type:=new DTYPEImpl("void",0);
     AX^code := "";
  end} 
  
@@ -585,7 +588,7 @@ end}
 R ->  T  RX #r ;
 #r{
 do
- if RX^type.compareTo(new DtypeImpl("void", 0)) then
+ if RX^type.compareTo(new DTYPEImpl("void", 0)) then
      R^type := T^type; 
      R^code := T^code ;
  elseif RX^type.compareTo(T^type) then
@@ -600,8 +603,8 @@ end}
 RX ->   OPADD  T RX #r ;
 #r{
 do
-    if T^type.compareTo(new DtypeImpl("entier",1))  then   
-       if RX1^type.compareTo(new DtypeImpl("void", 0)) then
+    if T^type.compareTo(new DTYPEImpl("entier",1))  then   
+       if RX1^type.compareTo(new DTYPEImpl("void", 0)) then
           RX^type := T^type;  
           RX^code := T^code ; --+ OPADD^code
        elseif RX1^type.compareTo(T^type) then
@@ -617,7 +620,7 @@ do
 RX -> #r ;
 #r{
 do
-    RX^type:=new DtypeImpl("void",0);
+    RX^type:=new DTYPEImpl("void",0);
     RX^code := "";
  end}
 -- operateurs additifs
@@ -643,7 +646,7 @@ end}
 T ->  F  TX #r ;
 #r{
 do
- if TX^type.compareTo(new DtypeImpl("void", 0)) then
+ if TX^type.compareTo(new DTYPEImpl("void", 0)) then
      T^type := F^type;  
      T^code := F^code ;
  elseif TX^type.compareTo(F^type) then
@@ -656,13 +659,13 @@ end}
 TX ->   OPMUL   #hp F TX #r ;
 #hp{
 do
-  F^hparams:=new Parametres();
+  F^hparams:=new PARAMETRES();
 end
 }
 #r{
 do
-    if F^type.compareTo(new DtypeImpl("entier",1)) then
-       if TX1^type.compareTo(new DtypeImpl("void", 0)) then
+    if F^type.compareTo(new DTYPEImpl("entier",1)) then
+       if TX1^type.compareTo(new DTYPEImpl("void", 0)) then
           TX^type := F^type;  
           TX^code := F^code; --+ OPMUL^code
        elseif TX1^type.compareTo(F^type) then
@@ -678,7 +681,7 @@ do
 TX ->  #r ;
 #r{
 do
-    TX^type:=new DtypeImpl("void",0);
+    TX^type:=new DTYPEImpl("void",0);
     TX^code := "";
  end}
 -- operateurs multiplicatifs
@@ -707,7 +710,7 @@ end}
 F -> entier #type;
 #type{
 do
-   F^type := new DtypeImpl("entier", 1);
+   F^type := new DTYPEImpl("entier", 1);
    F^code := F^tam.genCst(entier^txt);
    F^code_est_adresse := false;
    F^adresse := -1;
@@ -717,7 +720,7 @@ end
 F -> chaine #type;
 #type{
 do
-   F^type := new DtypeImpl("entier", 1);
+   F^type := new DTYPEImpl("entier", 1);
    F^code := F^tam.genCst(chaine^txt); 
    F^code_est_adresse := false;
    F^adresse := -1;
@@ -727,7 +730,7 @@ end
 F -> caractere #type;
 #type{
 do
-   F^type := new DtypeImpl("entier", 1);
+   F^type := new DTYPEImpl("entier", 1);
    F^code := F^tam.genCst(caractere^txt); 
    F^code_est_adresse := false;
    F^adresse := -1;
@@ -766,7 +769,7 @@ end
 F -> null  #gen;
 #gen{
 do
-   F^type := new DtypeImpl("void",1);
+   F^type := new DTYPEImpl("void",1);
    F^code_est_adresse := false;
    F^adresse := -1;
    F^code := "";
@@ -774,11 +777,11 @@ end
 }
 -- expression parenthesee
 --F ->  paro E parf FX ;
-F -> #dec paro TYPE parf  F #gen;      --cast ??? nader
-#dec{
-do
-    TYPE^hdep := new Emplacement(0, new Register("SB", 0));   --classe Emplacement dans mcsgc
-end}
+F -> paro TYPE parf  F #gen;      --cast ??? nader
+--#dec{
+--do
+    -- TYPE^hdep := new Emplacement(0, new Register("SB", 0));   --classe Emplacement dans mcsgc | Pas d'emplacements pour un type (Maxime)
+--end}
 --#gen{       --nader
 --do
   -- if (F1^type.getTaille()=TYPE^type.getTaille()) then
@@ -795,7 +798,7 @@ do
         F^adresse := F1^adresse;
         F^code := F1^code;
     else
-        error(Wrong_Type, TYPE^type, F1^type);
+        error(Wrong_Type, F1^type);
     end
 end
 }
@@ -832,10 +835,50 @@ do
    else
     error(B_11, F^htype);
   end
-
 end
 }
-F -> ident #h FX ;
+
+F -> ident #h FX #gen;
+#gen {
+local
+    i : INFO;
+    c : DTYPE;
+do
+    i := F^tds.chercherGlobalement(ident^txt);
+    if i /= null then
+        match i with INFOVAR then
+            c := i.getType();
+            F^type := c;
+            F^code_est_adresse := true; -- ou true ?
+            F^code := F^tam.genAdr(i.getDep());
+        end
+        match i with INFOFONC then
+        end
+    end
+end
+}
+#h {
+local
+ s : STRUCT ;
+ c : CHAMP;
+ lc : LCHAMPS;
+do
+  match FX^htype with STRUCT then
+  end
+end
+}
+
+FX ->#gen ;
+#gen {
+do
+  FX^type := FX^htype;
+  FX^code_est_adresse := FX^hcode_est_adresse;
+  FX^code := FX^hcode; -- non vide !!
+  FX^adresse := FX^hadresse;
+end
+}
+-- acces champ
+FX -> pt ident #h FX  #gen;
 #h {
 local
  s : STRUCT ;
@@ -847,37 +890,21 @@ do
     s := FX^htype;
     lc := s.getChamps();
     c := lc.chercher(ident^txt);
-    if c = nil then
-      error(B_10, ident^txt) ;
+    if c = null then
+      error(Unaffected_ident, ident^txt) ;
     else
-      FX1^htype := c.getType();
-      --FX1^hcode_est_adresse := FX^hcode_est_adresse;
-      if FX^hadresse = -1 then
-        FX1^hadresse := -1;
-        FX1^hcode :=FX^hcode + FX^tam.genComment("acces champ : " + ident^txt) +
-                  FX^tam.genAdrField(c.getDep())  ;
-      else
-        FX1^hadresse := FX^hadresse + c.getDep();
-        FX1^hcode := FX^tam.genComment("acces champ : " + ident^txt);
-      end
+      FX1^htype := c.getType();        
+      FX1^hcode_est_adresse := false;
+      FX1^hcode := FX^hcode +  FX^tam.genAdrField(c.getDep()) ;
+     -------------------------------------------------------
     end    
   else
-    error(B_09, FX^htype); 
+    error(Wrong_type, FX^htype);
   end
 
 end
 }
-FX ->#gen ;
-#gen {
-do
-  FX^type := FX^htype;
-  FX^code_est_adresse := FX^hcode_est_adresse;
-  FX^code := FX^hcode; -- non vide !!
-  FX^adresse := FX^hadresse;
-end
-}
--- acces champ
-FX ->   pt #h FX  #gen;
+
 #gen {
 do
   FX^type := FX1^type;
@@ -933,7 +960,7 @@ do
   -- par leurs adresses.
   INST^dep:=INST^hdep;      --nader
   INST^code := ASM^code_asm;
-  INST^type := new DtypeImpl("void", 0); -- si il ya du code assembleur le type de retour est void
+  INST^type := new DTYPEImpl("void", 0); -- si il ya du code assembleur le type de retour est void
 end
 }
 

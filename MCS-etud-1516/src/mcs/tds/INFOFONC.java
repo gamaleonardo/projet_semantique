@@ -4,14 +4,14 @@ import java.util.ArrayList;
 
 import mcs.gc.Emplacement;
 import mcs.type.*;
-import mcs.type.Parametres;
+import mcs.type.PARAMETRES;
 
 public class INFOFONC implements INFO {
-	protected DtypeImpl typeRetour;
-	protected Parametres params;
+	protected DTYPE typeRetour;
+	protected PARAMETRES params;
 	protected Emplacement empl;
 	
-	public DtypeImpl getType() {
+	public DTYPE getType() {
 		return typeRetour;
 	}
 
@@ -23,13 +23,13 @@ public class INFOFONC implements INFO {
 		return this.getType().getTaille();
 	}
 
-	public INFOFONC(DtypeImpl t, Emplacement e, Parametres p) {
+	public INFOFONC(DTYPE t, Emplacement e, PARAMETRES p) {
 		typeRetour = t;
 		empl = e;
 		params = p;
 	}
 	
-	public Parametres getParams(){
+	public PARAMETRES getParams(){
 		return params;
 	}
 

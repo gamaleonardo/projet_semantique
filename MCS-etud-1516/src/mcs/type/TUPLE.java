@@ -1,6 +1,6 @@
 package mcs.type;
 
-public class TUPLE extends DtypeImpl{
+public class TUPLE extends DTYPEImpl{
 
 	private LTYPES types;
 

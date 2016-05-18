@@ -1,6 +1,6 @@
 package mcs.type;
 
-public class STRUCT extends DtypeImpl {
+public class STRUCT extends DTYPEImpl {
 
 	private LCHAMPS champs;
 

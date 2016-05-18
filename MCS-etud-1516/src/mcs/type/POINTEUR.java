@@ -1,23 +1,23 @@
 package mcs.type;
 
 
-public class POINTEUR extends DtypeImpl {
-	private DtypeImpl type;
+public class POINTEUR extends DTYPEImpl {
+	private DTYPEImpl type;
 
 
-	public POINTEUR(DtypeImpl t) {
+	public POINTEUR(DTYPEImpl t) {
 		super("pointeur", 1);
 		type = t;
 
 	}
 
-	public DtypeImpl getType() {
+	public DTYPEImpl getType() {
 		return type;
 	}
 	
 
 	
-	public boolean compareTo(DtypeImpl autre) {
+	public boolean compareTo(DTYPEImpl autre) {
 		if ((autre.getNom()).equals("id")||(autre.getNom()).equals("null")){
 			return true;
 	    }else{

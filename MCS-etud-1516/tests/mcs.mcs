@@ -25,7 +25,7 @@ int estRouge(int c){
   return c == 42;
   }
   
-// les modes de passages de parametres en mCS sont plus riches qu'en mC
+// les modes de passages de PARAMETRES en mCS sont plus riches qu'en mC
  void swap(ref int a, ref int b){
    int tmp = a;
    a = b;
