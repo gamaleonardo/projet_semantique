@@ -918,13 +918,43 @@ end
 -- acces champ pointeur
 FX ->   arrow  ident FX ;
 -- appel de sous-programme
-FX ->   paro ES parf FX;
--- arguments appel de sous-programme
-ES -> ;
-ES -> E ESX  ;
-ESX ->  ;
-ESX -> virg E ESX ;
+FX ->   paro ES parf FX ;
 
+-- arguments appel de sous-programme
+ES -> #p;
+#p{
+do
+    ES^params := new Parametres();
+    ES^code := "";
+end}
+ES -> #init E ESX #gen;
+#init{
+local
+   p : Parametres;
+do
+    p := new Parametres();
+    E^hparams := p;
+    ESX^hparams := p;
+end}
+#gen{
+do
+    ES^params := ESX^params;
+    ES^code := E^code + ESX^code;
+end}
+ESX ->  #gen ;
+#gen{
+do
+   ESX^params:= ESX^hparams;
+   ESX^code := "";
+   end
+}
+
+ESX -> virg E ESX #gen ;
+#gen{
+do
+   ESX^params:=ESX1^params;
+   ESX^code := E^code + ESX1^code;
+end}
 ------------- inline asm ----------------
 -- peut être utile pour implanter des sous-programmes
 -- directement en assembleur TAM.
