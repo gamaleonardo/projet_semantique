@@ -849,22 +849,23 @@ do
         match i with INFOVAR then
             c := i.getType();
             F^type := c;
-            F^code_est_adresse := true; -- ou true ?
+            F^code_est_adresse := true;
             F^code := F^tam.genAdr(i.getDep());
+            F^adresse := i.getDep();
         end
         match i with INFOFONC then
+            c := i.getType();
+            F^type := c;
+            F^code_est_adresse := true; --Le code de f envoie vers l'emplacement de la fonction ? 
+            F^code := FX^code + F^tam.genToFunction();
+            F^adresse := i.getDep();
         end
     end
 end
 }
 #h {
-local
- s : STRUCT ;
- c : CHAMP;
- lc : LCHAMPS;
 do
-  match FX^htype with STRUCT then
-  end
+  FX^hcode_est_adresse := false;
 end
 }
 
@@ -896,7 +897,6 @@ do
       FX1^htype := c.getType();        
       FX1^hcode_est_adresse := false;
       FX1^hcode := FX^hcode +  FX^tam.genAdrField(c.getDep()) ;
-     -------------------------------------------------------
     end    
   else
     error(Wrong_type, FX^htype);
@@ -916,9 +916,50 @@ end
 
 
 -- acces champ pointeur
-FX ->   arrow  ident FX ;
+FX ->   arrow  ident #h FX  #gen;
+#h {
+local
+ s : STRUCT ;
+ c : CHAMP;
+ lc : LCHAMPS;
+do
+  match FX^htype
+  with STRUCT then
+    s := FX^htype;
+    lc := s.getChamps();
+    c := lc.chercher(ident^txt);
+    if c = null then
+      error(Unaffected_ident, ident^txt) ;
+    else
+      FX1^htype := c.getType();        
+      FX1^hcode_est_adresse := false;
+      FX1^hcode := FX^hcode +  FX^tam.genAdrField(c.getDep()) ;
+    end    
+  else
+    error(Wrong_type, FX^htype);
+  end
+
+end
+}
+
+#gen {
+do
+  FX^type := FX1^type;
+  FX^code_est_adresse := true;
+  FX^code :=FX1^code;
+  FX^adresse := FX1^adresse;
+end
+}
 -- appel de sous-programme
-FX ->   paro ES parf FX ;
+FX ->   paro ES parf FX  #gen; --Verifier les parametres || A ce niveau ??
+#gen {
+do
+  FX^type := FX1^type;
+  FX^code_est_adresse := true;
+  FX^code :=FX1^code;
+  FX^adresse := FX1^adresse;
+end
+}
 
 -- arguments appel de sous-programme
 ES -> #p;
