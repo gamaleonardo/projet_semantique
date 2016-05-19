@@ -19,14 +19,6 @@ public class MTAM extends AbstractMachine {
 	}
 	private String nom;
 
-	public MTAM(String fname) {
-		if (fname.endsWith(".bloc")) {
-			nom = fname.substring(0, fname.length() - 5);
-		} else {
-			nom = fname;
-		}
-	}
-
 	public String genFonction(String etiquette, int taillepars,
 			int tailleretour, String code) {
 		return "_" + etiquette + ":\n" + code + "\tRETURN (" + taillepars + ") "

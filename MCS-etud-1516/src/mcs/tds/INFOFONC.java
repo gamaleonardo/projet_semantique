@@ -25,7 +25,7 @@ public class INFOFONC implements INFO {
 		return this.getType().getTaille();
 	}
 
-	public INFOFONC(DTYPE t, Emplacement e, PARAMETRES p) {
+	public INFOFONC(DTYPE t, Emplacement e, PARAMETRES p,TDS tds) {
 		typeRetour = t;
 		empl = e;
 		params = p;
