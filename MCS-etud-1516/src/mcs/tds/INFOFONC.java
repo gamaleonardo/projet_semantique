@@ -10,6 +10,8 @@ public class INFOFONC implements INFO {
 	protected DTYPE typeRetour;
 	protected PARAMETRES params;
 	protected Emplacement empl;
+	protected TDS ftds ; // la table de symbole associee au corps de la fonction
+	
 	
 	public DTYPE getType() {
 		return typeRetour;
@@ -27,6 +29,7 @@ public class INFOFONC implements INFO {
 		typeRetour = t;
 		empl = e;
 		params = p;
+		ftds = tds;
 	}
 	
 	public PARAMETRES getParams(){
@@ -37,5 +40,7 @@ public class INFOFONC implements INFO {
 	public String toString() {
 		return "INFOFONC [type=" + typeRetour.getNom() + ", empl=" + empl + "]";
 	}
-
+	public TDS getTDS(){
+		return ftds;
+	}
 }
