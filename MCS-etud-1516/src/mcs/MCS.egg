@@ -19,15 +19,14 @@ inh machine : IMachine for
 --         -- fin extension MCS
          ;
 inh tam : IMachine for
-         PROGRAMME, ENTITES, FONCTION, INST, BLOC, INSTS, SIX,
-         PARFS, PARF, PARFSX, ES, ESX, TYPE, STYPE, PTRS,
+         PROGRAMME, ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
+         PARFS, PARF, PARFSX, ES, ESX, DECL,
          E, AFFX, A, AX, R, RX, T, TX, F,FX
          ;
 -- ces attributs permettent de recuperer les instructions du code ASM inline       
 syn code_asm : STRING for ASM;
 syn code : STRING for 
          ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
-         TYPE, STYPE, PTRS,
          ES, ESX, 
          E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F 
          ;
@@ -37,13 +36,13 @@ inh hcode : STRING for PTRS, F, FX;
 inh tds_asm : TDS for ASM;
 
 inh tds : TDS for 
-         ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,CHAMPS,
+         ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
 
 
 
-syn type : DtypeImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
+syn type : DTYPEImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
 syn params : Parametres for PARFS, PARFSX, ESX, ES;
 inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F;
@@ -51,9 +50,9 @@ inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F;
 
 
 
-inh htype: DtypeImpl for PTRS, FX, AFFX, F;
+inh htype: DTYPEImpl for PTRS, FX, AFFX, F;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
-syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL,TYPE;
+syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL;
 inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE;     
 
 inh champs : DTYPE for CHAMPS, CHAMP;
@@ -139,40 +138,38 @@ global
 #init {
 local
 do
-  
-   ENTITES^tam := new MTAM();
-   ENTITES^hdep:=new Emplacement(0, new Register("SB",1));  
-   machine := PROGRAMME^source.getMachine();
-   if machine = null then
-     error(NO_MACH, PROGRAMME^source.getMachName());
-   else
-     ENTITES^machine := machine;
-   end
-  tds := new TDS();
-  ENTITES^tds := tds;
-  ENTITES^tds := new TDS();
-  ENTITES^hdep:=0;
-end
-}
+	ENTITES^tam := new MTAM();
+	ENTITES^hdep:=new Emplacement(0, new Register("SB",1));  
+	machine := PROGRAMME^source.getMachine();
+	if machine = null then
+    	error(NO_MACH, PROGRAMME^source.getMachName());
+	else
+	   ENTITES^machine := machine;
+	end
+	tds := new TDS();
+	ENTITES^tds := tds;
+	ENTITES^tds := new TDS();
+	ENTITES^hdep:=0;
+end}
 -- ecrit le code dans un fichier
 #gen {
 local
-    tam : IMachine;
+	tam : IMachine;
 do
-   tam := new MTAM();
-   if (tds.chercherLocalement("main")= null) then
-       error(no_main);
-   else
-        machine.writeCode(PROGRAMME^source.getFileName(), tam.genCall("main")+ENTITES^code);
-  end   
+	tam := new MTAM();
+	if (tds.chercherLocalement("main")= null) then
+    	error(no_main);
+	else
+	   machine.writeCode(PROGRAMME^source.getFileName(), tam.genCall("main")+ENTITES^code);
+	end   
 end}
 
 
 ENTITES -> #gen;
 #gen {
 do
-ENTITES^dep:=ENTITES^hdep;
-ENTITES^code:="";
+	ENTITES^dep:=ENTITES^hdep;
+	ENTITES^code:="";
 end}
 
 
@@ -195,55 +192,58 @@ do
 end}
 #gen{
 do
-	ENTITES^dep:=ENTITES1^dep;
+    ENTITES^dep:=ENTITES1^dep;
     ENTITES^code:=ENTITE^code + ENTITES1^code;
 end}
 
 
 -- definition d'un nom de type (commence par une majuscule)
 ENTITE -> typedef TYPE identc pv #tds ;
-  #tds{
-  local 
-    i: INFO;
-  do
-  i := ENTITE^tds.chercherLocalement(identc^txt);
-   if i /= null then
-      error(ident_existe_deja, identc^txt);
-   end
-   -- defintion d'un nouveau type
-   i:= new INFOTYPE(TYPE^type);
-   ENTITE^tds.inserer(identc^txt,i); 
-   ENTITE^dep:=ENTITE^hdep;
-   ENTITE^code:="";  
+#tds{
+local 
+	i: INFO;
+do
+	i := ENTITE^tds.chercherLocalement(identc^txt);
+	if i /= null then
+    	error(ident_existe_deja, identc^txt);
+	end
+	-- defintion d'un nouveau type
+	i:= new INFOTYPE(TYPE^type);
+	ENTITE^tds.inserer(identc^txt,i); 
+	ENTITE^dep:=ENTITE^hdep;
+	ENTITE^code:="";  
 end }
+
+
 -- definition d'une variable globale ou d'une fonction
 -- (commence par une minuscule)
-
 ENTITE ->  TYPE ident #tds DECL #gen;
 #tds{
 do
-DECL^declid:=ident^txt;
-DECL^declt:=TYPE^type;
-DECL^tds:=ENTITE^tds;
-DECL^hdep:=ENTITE^hdep;
+	DECL^declid:=ident^txt;
+	DECL^declt:=TYPE^type;
+	DECL^tds:=ENTITE^tds;
+	DECL^hdep:=ENTITE^hdep;
 end}
 #gen{
-  local 
+local 
     i: INFO;
-  do
-  i := ENTITE^tds.chercherLocalement(ident^txt);
-   if i /= null then
-      error(ident_existe_deja, ident^txt);
-   end
- ENTITE^dep:= DECL^dep;  
- -- i := ENTITE^tds.chercherLocalement(ident^txt);
- --  if i /= null then
- --       match DECL^type with FONCTION then
- --                 error(ident_existe_deja, ident^txt); -- il s'agit d'une fonction donc traitement de la surcharge (nombre de paramétres différents avec le meme nom de fonction)
- --       else
- --                 error(ident_existe_deja, ident^txt);
- --       end                                    
- --  end
+do
+	i := ENTITE^tds.chercherLocalement(ident^txt);
+	if i /= null then
+    	error(ident_existe_deja, ident^txt);
+	end
+	ENTITE^dep:= DECL^dep;  
+	i := ENTITE^tds.chercherLocalement(ident^txt);
+	if i /= null then
+	   match i
+	       with FONCTION then
+	           error(ident_existe_deja, ident^txt); -- il s'agit d'une fonction donc traitement de la surcharge (nombre de paramétres différents avec le meme nom de fonction)
+	       else
+	           error(ident_existe_deja, ident^txt);
+       end                                    
+	end
+    ENTITE^code := ""; -- ???
 end}
 
 
@@ -251,16 +251,16 @@ end}
 DECL -> pv #tds_type;
 #tds_type{
 local 
- i:INFOVAR;
+    i:INFOVAR;
 do
     i := DECL^tds.chercherLocalement(DECL^declid);
     if (i/=null) then
         error(ident_existe_deja, DECL^declid);
-      else
-      -- creation d'une nouvelle variable et ajout dans la table des symboles
-	  i:= new INFOVAR(DECL^declt,DECL^hdep);
-	  call DECL^tds.inserer(DECL^declid,i);
-      DECL^dep:= DECL^hdep + DECL^declt.getTaille();
+    else
+		-- creation d'une nouvelle variable et ajout dans la table des symboles
+		i:= new INFOVAR(DECL^declt,DECL^hdep);
+		call DECL^tds.inserer(DECL^declid,i);
+		DECL^dep:= DECL^hdep + DECL^declt.getTaille();
     end 
 end}
 
@@ -272,31 +272,33 @@ do
 end}
 #tds{
 do
-     FONCTION^declid:=DECL^declid;
-     FONCTION^declt:=DECL^declt;
-     FONCTION^tds := DECL^tds;
+    FONCTION^declid:=DECL^declid;
+    FONCTION^declt:=DECL^declt;
+    FONCTION^tds := DECL^tds;
 end}
 
 
 -- Fonction
-FONCTION ->  paro PARFS parf #tds BLOC #tdstype ;
+FONCTION ->  paro PARFS parf #tds BLOC #gen ;
 global
-ifonc:INFOFONC;
+    ifonc:INFOFONC;
 #tds{
 local
-tds:TDS;
+    tds:TDS;
 do
 	tds:=new TDS(FONCTION^tds);
 	ifonc:= new INFOFONC(FONCTION^declt,null,PARFS^params,tds);
 	FONCTION^tds.inserer(FONCTION^declid,ifonc);
 	BLOC^infonc:=ifonc;
 	BLOC^hdep:=PARFS^dep;
-end
-}
-#tdstype{
+    BLOC^htyp := null; --type pour un BLOC ?? 
+end}
+#gen{
 do
- FONCTION^dep:=BLOC^dep;    
- end}
+    FONCTION^dep:=BLOC^dep;    
+    FONCTION^type := BLOC^type;
+    FONCTION^code := ""; --A completer
+end}
  
  
  
@@ -322,7 +324,7 @@ do
 end}
 #hdep{
 do 
-   PARFSX^hdep:=PARF^dep;
+    PARFSX^hdep:=PARF^dep;
 end}
 #fin{
 do
@@ -363,7 +365,7 @@ local
 do
     t := PARF^hparams.getParametre(ident^txt);
     if (t = null) then
-       iv := new INFOVAR(TYPE^type,TYPE^dep);
+       iv := new INFOVAR(TYPE^type,TYPE^type.getTaille());
        PARF^hparams.inserer(ident^txt,iv);
     else
         error(parametre_existe_deja, ident^txt);
@@ -376,17 +378,12 @@ do
 TYPE -> STYPE  #htype PTRS #type;
 #htype{
 do 
-  PTRS^htype:= STYPE^type;
-  PTRS^hcode := "";
+	PTRS^htype:= STYPE^type;
+	PTRS^hcode := "";
 end}
 #type {
 do
-  TYPE^type := PTRS^type;
-   if (PTRS^code="")then
-     TYPE^code := STYPE^code;
-  else
-     TYPE^code := PTRS^code;
-  end
+    TYPE^type := PTRS^type;
 end}
 
 
@@ -395,21 +392,20 @@ end}
 PTRS -> #type;
 #type{
 do
-
-    PTRS^type := PTRS^htype;
-    PTRS^code := PTRS^hcode ; --PTRS^tam.genIMalloc(PTRS^hdep) pour faire de storei
+	PTRS^type := PTRS^htype;
+	--PTRS^code := PTRS^hcode ; --PTRS^tam.genIMalloc(PTRS^hdep) pour faire de storei
 end}
 
-PTRS -> mult #gencode PTRS #type;
-#gencode {
-do
-     -- il faut verifié si les params sont déclaré : il faut ajouté un attribut hérité??????
-     PTRS1^hcode := PTRS^hcode+PTRS^tam.genMalloc(1);
-end}
+PTRS -> mult PTRS #type;
+--#gencode {
+--do
+	-- il faut verifié si les params sont déclaré : il faut ajouté un attribut hérité??????
+	--PTRS1^hcode := PTRS^hcode+PTRS^tam.genMalloc(1);
+--end}
 #type {
 do
-  PTRS^type := new POINTEUR(PTRS1^type);
-  PTRS^code := PTRS1^code;
+	PTRS^type := new POINTEUR(PTRS1^type);
+--	PTRS^code := PTRS1^code;
 end}
 
 
@@ -418,14 +414,12 @@ STYPE-> void  #type ;
 #type{
 do
     STYPE^type := new DTYPEImpl("void", 0);
-    STYPE^code := "";  
 end}
 
 STYPE-> int #type;
 #type{
 do
     STYPE^type := new DTYPEImpl("entier", 1);
-    STYPE^code := ""; 
 end}
 
 STYPE-> char #type;
@@ -433,39 +427,14 @@ STYPE-> char #type;
 #type{
 do
     STYPE^type := new DTYPEImpl("caractere", 1);
-    STYPE^code := ""; 
   
 end}
 
 STYPE -> identc #type;
--------------  
--- et struct
+-- et struct ?
 #type{
 do
     STYPE^type := new DTYPEImpl("caracteretc", 1);
-    STYPE^code := "";
-  
-end}
-
-STYPE -> struct aco #tds CHAMPS #type acf ;     --?????? Nader 
-#tds{
-do
-    CHAMPS^tds := new TDS();
-    CHAMPS^hdep:=STYPE^hdep;
-end
-}
-#type{
-do
-  --STYPE^code := CHAMPS^code;    a vérifier si il y a un code de type pour le champs
-  --STYPE^type := CHAMPS^type;
-end}
-CHAMPS -> #type;
-#type{
-do 
-  --CHAMPS^code := "";
-  --CHAMPS^type:=new DtypeImpl("void",0);
-  --CHAMPS^champs:=
-  CHAMPS^dep:=CHAMPS^hdep;
 end}
 
 STYPE -> struct #1 aco CHAMPS acf #2  ;
@@ -535,6 +504,7 @@ do
   BLOC^dep:=INSTS^dep;
 end}
 
+
 INSTS -> #gen  ;
 #gen{
 do 
@@ -543,13 +513,14 @@ do
   INSTS^dep:=INSTS^hdep;
 end}
 
+
 INSTS -> #htype INST #hdep INSTS #gen  ;
 -- declaration de variable locale avec ou sans init 
 #htype{
 do
-INST^htyp:=INSTS^htyp;    -- inutile car la transmission se fait automatiquement (MA)
-INSTS1^htyp:=INSTS^htyp;
-INST^hdep:=INSTS^hdep;
+	INST^htyp:=INSTS^htyp;    -- inutile car la transmission se fait automatiquement (MA)
+	INSTS1^htyp:=INSTS^htyp;
+	INST^hdep:=INSTS^hdep;
 end}
 #hdep{
 do
@@ -569,23 +540,29 @@ do
     INSTS^code:=INST^code + INSTS1^code;   
 end}
 
-INST ->  TYPE ident  AFFX pv #tds ;
+
+INST ->  TYPE ident #hAFFX AFFX pv #tds ;
+#hAFFX{
+do
+    AFFX^htype := TYPE^type;
+end}
 #tds{
 local
-i: INFO;
-
+    i: INFO;
 do
   i := INST^tds.chercherLocalement(ident^txt);
    if i /= null then
       error(ident_existe_deja, ident^txt);
-   end
-   -- defintion d'un nouveau type
-   i:= new INFOVAR(TYPE^type,null);
-   INST^tds.inserer(ident^txt,i); 
-   if ~(TYPE^type.compareTo(AFFX^type)) then
+   elseif !(TYPE^type.compareTo(AFFX^type)) then
         error(pas_instruction, TYPE^type);
+   else
+        -- defintion d'un nouveau type
+        i:= new INFOVAR(TYPE^type,null);
+        INST^tds.inserer(ident^txt,i);  
+        INST^dep:= INST^hdep + TYPE^type.getTaille();
+        INST^type := TYPE^type;
+        INST^code := INST^tam.genDecl(ident^txt, i, AFFX^code);
    end
-   INST^dep:= INST^hdep + TYPE^type.getTaille(); 
 end}
 
 
@@ -626,7 +603,12 @@ end}
 
 
 -- conditionnelle
-INST ->   si paro E parf #tds BLOC SIX ;
+INST ->   si paro #hE E parf #tds BLOC SIX #gen ;
+#hE {
+do
+    E^hparams := new PARAMETRES();
+end
+}
 #tds{
 do
     BLOC^tds := new TDS(INST^tds);
@@ -635,13 +617,20 @@ do
     SIX^htyp:=INST^htyp;
     BLOC^hdep:=INST^hdep;
     SIX^hdep:=INST^hdep;
+    BLOC^infonc:= new INFOFONC(null, null, null, null);
+end}
+#gen {
+do
+    INST^code := INST^tam.genIf(E^code, BLOC^code, SIX^code);
+    INST^dep := INST^hdep;
+    INST^type := new DTYPEimpl("void",0);
 end}
 
 SIX ->   sinon #hdep BLOC #r ;
 #hdep{
 do
     BLOC^hdep:=SIX^hdep;
-    BLOC^infonc := new INFOFONC(null,null, null);
+    BLOC^infonc := new INFOFONC(null,null, null, null);
 end}
 #r {
 do
