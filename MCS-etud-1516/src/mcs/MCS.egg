@@ -37,7 +37,7 @@ inh hcode : STRING for PTRS, F, FX;
 inh tds_asm : TDS for ASM;
 
 inh tds : TDS for 
-         ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
+         ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,CHAMPS,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
 
@@ -53,18 +53,14 @@ inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F;
 
 inh htype: DtypeImpl for PTRS, FX, AFFX, F;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
-syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX,TYPE, CHAMPS, CHAMP, DECL;
-inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL;     
+syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL,TYPE;
+inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE;     
 
 inh champs : DTYPE for CHAMPS, CHAMP;
 inh declid : STRING for DECL,FONCTION;
 inh declt : STRING for DECL,FONCTION;
 inh infonc : INFOFONC for BLOC;
 
-
-
-
-    
 
 syn code_est_adresse : BOOLEAN for  F, FX ;
 inh hcode_est_adresse : BOOLEAN for FX ;
@@ -168,12 +164,7 @@ do
        error(no_main);
    else
         machine.writeCode(PROGRAMME^source.getFileName(), tam.genCall("main")+ENTITES^code);
-  end 
---do  --if faut chercher le main existe ou pas
-    --if (ENTITES^std.chercherLocalement("main")= null) then
-    -- error(main_nexiste_pas);
-    
-     -- machine.writeCode(PROGRAMME^source.getFileName(),"; no code\n");  
+  end   
 end}
 
 
@@ -211,8 +202,6 @@ end}
 
 -- definition d'un nom de type (commence par une majuscule)
 ENTITE -> typedef TYPE identc pv #tds ;
--- definition d'une variable globale ou d'une fonction
--- (commence par une minuscule)
   #tds{
   local 
     i: INFO;
@@ -227,7 +216,8 @@ ENTITE -> typedef TYPE identc pv #tds ;
    ENTITE^dep:=ENTITE^hdep;
    ENTITE^code:="";  
 end }
-
+-- definition d'une variable globale ou d'une fonction
+-- (commence par une minuscule)
 
 ENTITE ->  TYPE ident #tds DECL #gen;
 #tds{
@@ -306,14 +296,6 @@ end
 #tdstype{
 do
  FONCTION^dep:=BLOC^dep;    
-    --i := FONCTION^tds.chercherLocalement(xxxxx); --ident^txt
-    --if i /= null then
-     -- error(la_fonction_existe_deja, xxxxx);
-      --else
-      -- creer une variable      ??????? problème pas d'acces a Type^type dans la déclaration ?
-      --ifonc := new INFOFONC(TYPE^type, FONCTION^hdep, PARFS^params); --initialiser deplacement
-     -- FONCTION^tds.inserer(ident^txt,  ifonc);
-      --end
  end}
  
  
@@ -323,8 +305,6 @@ PARFS ->#param;
 #param{
 do
     PARFS^params := new PARAMETRES();
-    --PARFS^params := new Parametres();   nader
-    --PARFS^dep:=PARFS^hdep;
     PARFS^params :=null;
     PARFS^dep:=PARFS^hdep;
 end}
@@ -395,10 +375,6 @@ do
 -- les types (de base, noms, struct et pointeurs)
 TYPE -> STYPE  #htype PTRS #type;
 #htype{
---TYPE -> STYPE  #htyp PTRS #type;
--- type de base
--- des * pour definir un pointeur
---#htyp{
 do 
   PTRS^htype:= STYPE^type;
   PTRS^hcode := "";
@@ -421,7 +397,7 @@ PTRS -> #type;
 do
 
     PTRS^type := PTRS^htype;
-    --PTRS^code := PTRS^hcode + ????
+    PTRS^code := PTRS^hcode ; --PTRS^tam.genIMalloc(PTRS^hdep) pour faire de storei
 end}
 
 PTRS -> mult #gencode PTRS #type;
@@ -442,14 +418,14 @@ STYPE-> void  #type ;
 #type{
 do
     STYPE^type := new DTYPEImpl("void", 0);
-    STYPE^code := ""; --STYPE^tam.genXXXXXX(1); 
+    STYPE^code := "";  
 end}
 
 STYPE-> int #type;
 #type{
 do
     STYPE^type := new DTYPEImpl("entier", 1);
-    STYPE^code := ""; --STYPE^tam.genXXXXXX(1);
+    STYPE^code := ""; 
 end}
 
 STYPE-> char #type;
@@ -457,7 +433,7 @@ STYPE-> char #type;
 #type{
 do
     STYPE^type := new DTYPEImpl("caractere", 1);
-    STYPE^code := ""; --STYPE^tam.genXXXX(1);
+    STYPE^code := ""; 
   
 end}
 
@@ -467,13 +443,30 @@ STYPE -> identc #type;
 #type{
 do
     STYPE^type := new DTYPEImpl("caracteretc", 1);
-    STYPE^code := STYPE^tam.genXXXX(1);
+    STYPE^code := "";
   
 end}
 
-STYPE -> struct aco CHAMPS acf ;     --?????? Nader 
-
-CHAMPS -> ;
+STYPE -> struct aco #tds CHAMPS #type acf ;     --?????? Nader 
+#tds{
+do
+    CHAMPS^tds := new TDS();
+    CHAMPS^hdep:=STYPE^hdep;
+end
+}
+#type{
+do
+  --STYPE^code := CHAMPS^code;    a vérifier si il y a un code de type pour le champs
+  --STYPE^type := CHAMPS^type;
+end}
+CHAMPS -> #type;
+#type{
+do 
+  --CHAMPS^code := "";
+  --CHAMPS^type:=new DtypeImpl("void",0);
+  --CHAMPS^champs:=
+  CHAMPS^dep:=CHAMPS^hdep;
+end}
 
 STYPE -> struct #1 aco CHAMPS acf #2  ;
 global
@@ -538,6 +531,7 @@ end
 #type{
 do
   BLOC^type := INSTS^type;
+  BLOC^code := INSTS^code; 
   BLOC^dep:=INSTS^dep;
 end}
 
@@ -620,6 +614,7 @@ INST -> #tds BLOC #type  ;
 do
     BLOC^tds := new TDS(INST^tds);
     BLOC^hdep:=INST^hdep;
+    BLOC^infonc:= new INFOFONC(null,null, null);
 end
 }
 #type{
@@ -1108,14 +1103,14 @@ do
             c := i.getType();
             F^type := c;
             F^code_est_adresse := true;
-            F^code := F^tam.genAdr(i.getDep());
+            F^code :=  F^tam.genAdr(i.getEmpl()) + FX^code; 
             F^adresse := i.getDep();
         end
         match i with INFOFONC then
             c := i.getType();
             F^type := c;
             F^code_est_adresse := true; --Le code de f envoie vers l'emplacement de la fonction ? 
-            F^code := FX^code + F^tam.genToFunction();
+            F^code:= FX^code + F^tam.genCall("_"+ident^txt);
             F^adresse := i.getDep();
         end
     end
@@ -1130,7 +1125,7 @@ FX ->#gen ;
 do
   FX^type := FX^htype;
   FX^code_est_adresse := FX^hcode_est_adresse;
-  FX^code := FX^hcode; -- non vide !!
+  FX^code :="";
   FX^adresse := FX^hadresse;
 end}
 
@@ -1152,7 +1147,7 @@ do
     else
       FX1^htype := c.getType();        
       FX1^hcode_est_adresse := false;
-      FX1^hcode := FX^hcode +  FX^tam.genAdrField(c.getDep()) ;
+      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
     end    
   else
     error(Wrong_type, FX^htype);
@@ -1185,7 +1180,7 @@ do
     else
       FX1^htype := c.getType();        
       FX1^hcode_est_adresse := false;
-      FX1^hcode := FX^hcode +  FX^tam.genAdrField(c.getDep()) ;
+      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
     end    
   else
     error(Wrong_type, FX^htype);
