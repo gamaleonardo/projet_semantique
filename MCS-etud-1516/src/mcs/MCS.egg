@@ -41,7 +41,7 @@ inh tds : TDS for
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX
          ;
-syn type : DTYPEImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
+syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
 inh htype: DTYPE for PTRS, FX, AFFX, F;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
@@ -52,9 +52,9 @@ inh hparams: PARAMETRES for PARF, PARFSX, E, ES, ESX, FX, F;
 syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL;
 inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE;     
 
-inh champs : DTYPE for CHAMPS, CHAMP;
+inh champs : LCHAMPS for CHAMPS, CHAMP;
 inh declid : STRING for DECL,FONCTION;
-inh declt : STRING for DECL,FONCTION;
+inh declt : DTYPE for DECL,FONCTION;
 inh infonc : INFOFONC for BLOC;
 
 
@@ -146,12 +146,12 @@ do
     tds := new TDS();
     ENTITES^tds := tds;
     ENTITES^tds := new TDS();
-    ENTITES^hdep:=0;
+    ENTITES^hdep:= new Emplacement(0,null);
 end}
 -- ecrit le code dans un fichier
 #gen {
 local
-    tam : IMachine;
+    tam : MTAM;
 do
     tam := new MTAM();
     if (tds.chercherLocalement("main")= null) then
@@ -226,7 +226,7 @@ do
     i := ENTITE^tds.chercherLocalement(ident^txt);
     if i /= null then
        match i
-           with FONCTION then
+           with INFOFONC then
                error(ident_existe_deja, ident^txt); -- il s'agit d'une fonction donc traitement de la surcharge (nombre de paramétres différents avec le meme nom de fonction)
            else
                error(ident_existe_deja, ident^txt);
@@ -240,7 +240,7 @@ end}
 DECL -> pv #tds_type;
 #tds_type{
 local 
-    i:INFOVAR;
+    i:INFO;
 do
     i := DECL^tds.chercherLocalement(DECL^declid);
     if (i/=null) then
@@ -352,10 +352,11 @@ local
     t : DTYPE;
     iv : INFOVAR;
 do
-    t := PARF^hparams.getParametre(ident^txt);
+    iv := PARF^hparams.getParametre(ident^txt);
+    t := iv.getType();
     if (t = null) then
-       iv := new INFOVAR(TYPE^type,TYPE^type.getTaille());
-       PARF^hparams.inserer(ident^txt,iv);
+       iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
+       PARF^hparams.ajouterParametre(ident^txt,iv); -- A voir ?
     else
         error(parametre_existe_deja, ident^txt);
     end
@@ -433,7 +434,7 @@ lt : LCHAMPS;
 do
     lt := new LCHAMPS();    
     CHAMPS^champs :=lt;
-    CHAMPS^hdep:=0; 
+    CHAMPS^hdep:= null; 
 end}
 #2{
 do
@@ -469,7 +470,7 @@ do
         else
         it:= new CHAMP(ident^txt, TYPE^type, CHAMP^hdep);
         CHAMP^champs.inserer(it);
-        CHAMP^dep:= CHAMP^hdep + TYPE^type.getTaille();     
+        CHAMP^dep:= new Emplacement (CHAMP^hdep.getDep() + TYPE^type.getTaille(), null);     
         end
     -- a completer generation de code
 end}
@@ -538,6 +539,7 @@ end}
 #tds{
 local
     i: INFO;
+    i2: INFOVAR;
 do
   i := INST^tds.chercherLocalement(ident^txt);
    if i /= null then
@@ -546,11 +548,11 @@ do
         error(pas_instruction, TYPE^type);
    else
         -- defintion d'un nouveau type
-        i:= new INFOVAR(TYPE^type,null);
-        INST^tds.inserer(ident^txt,i);  
-        INST^dep:= INST^hdep + TYPE^type.getTaille();
+        i2:= new INFOVAR(TYPE^type,null);
+        INST^tds.inserer(ident^txt,i2);  
+        INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), null);
         INST^type := TYPE^type;
-        INST^code := INST^tam.genDecl(ident^txt, i, AFFX^code);
+        INST^code := INST^tam.genDecl(ident^txt, i2, AFFX^code);
    end
 end}
 
@@ -559,18 +561,18 @@ end}
 INST -> #params E pv #r ;
 #params{
 do
-  E^hparams:=new PARAMETRES();
-  INST^dep:=INST^hdep;
+    E^hparams:=new PARAMETRES();
+    INST^dep:=INST^hdep;
  
 end}
 #r{
 do
- INST^type := new DTYPEImpl("void", 0);
- if ~(E^type.compareTo(new DTYPEImpl("void",0))) then
-    error(pas_instruction, E^type);
- end
- INST^code := E^code;
- INST^dep := new Emplacement(INST^hdep.getDep() + E^type.getTaille(), INST^hdep.getReg());
+    INST^type := new DTYPEImpl("void", 0);
+    if ~(E^type.compareTo(new DTYPEImpl("void",0))) then
+        error(pas_instruction, E^type);
+    end
+	INST^code := E^code;
+	INST^dep := new Emplacement(INST^hdep.getDep() + E^type.getTaille(), INST^hdep.getReg());
 end}
 
 
@@ -580,14 +582,14 @@ INST -> #tds BLOC #type  ;
 do
     BLOC^tds := new TDS(INST^tds);
     BLOC^hdep:=INST^hdep;
-    BLOC^infonc:= new INFOFONC(null,null, null);
+    BLOC^infonc:= new INFOFONC(null,null, null, null);
 end
 }
 #type{
 do
- INST^type := BLOC^type;
- INST^dep:=BLOC^dep;
- INST^code := BLOC^code;
+	INST^type := BLOC^type;
+	INST^dep:=BLOC^dep;
+	INST^code := BLOC^code;
 end}
 
 
@@ -612,7 +614,7 @@ end}
 do
     INST^code := INST^tam.genIf(E^code, BLOC^code, SIX^code);
     INST^dep := INST^hdep;
-    INST^type := new DTYPEimpl("void",0);
+    INST^type := new DTYPEImpl("void",0);
 end}
 
 SIX ->   sinon #hdep BLOC #r ;
@@ -625,7 +627,7 @@ end}
 do
    SIX^type := BLOC^type;
    SIX^dep:=BLOC^dep;
-   SIX^code := SIX^tam.genElse() + BLOC^code; 
+   SIX^code := BLOC^code; 
 end}   
 
 SIX -> #type;
@@ -646,7 +648,7 @@ end}
 do
      INST^type := E^type;
      INST^dep:=new Emplacement(INST^hdep.getDep()+E^type.getTaille(), INST^hdep.getReg());
-     INST^code := E^code + INST^tam.genRetour();   -- code : empiler E 
+     INST^code := E^code + INST^tam.genRetour("A completer");   -- code : empiler E 
 end}
 
 
@@ -708,7 +710,7 @@ end}
 AFFX -> #gen;
 #gen {
 do
-    AFFX^type := new TYPE("void", 0);
+    AFFX^type := new DTYPEImpl("void", 0);
     AFFX^code := "";
 end}
 
@@ -853,7 +855,7 @@ do  --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
   F^htype := null;
-  F^hadresse := null;
+  F^hadresse := -1;
 end
 }
 #r{
@@ -875,7 +877,7 @@ do --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
   F^htype := null;
-  F^hadresse := null;
+  F^hadresse := -1;
 end
 }
 #r{
@@ -1067,6 +1069,7 @@ F -> ident #h FX #gen;
 local
     i : INFO;
     c : DTYPE;
+    e : Emplacement;
 do
     i := F^tds.chercherGlobalement(ident^txt);
     if i /= null then
@@ -1082,7 +1085,8 @@ do
             F^type := c;
             F^code_est_adresse := true; --Le code de f envoie vers l'emplacement de la fonction ? 
             F^code:= FX^code + F^tam.genCall("_"+ident^txt);
-            F^adresse := i.getDep();
+            e :=i.getEmpl();
+            F^adresse := e.getDep();
         end
     end
 end}
@@ -1181,16 +1185,16 @@ end}
 ES -> #p;
 #p{
 do
-    ES^params := new Parametres();
+    ES^params := new PARAMETRES();
     ES^code := "";
 end}
 
 ES -> #init E ESX #gen;
 #init{
 local
-   p : Parametres;
+   p : PARAMETRES;
 do
-    p := new Parametres();
+    p := new PARAMETRES();
     E^hparams := p;
     ESX^hparams := p;
 end}

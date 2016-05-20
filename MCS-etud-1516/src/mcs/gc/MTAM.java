@@ -78,12 +78,7 @@ public class MTAM extends AbstractMachine {
 		// TODO Auto-generated method stub
 		return "\tLOAD(" + taille + ") " + dep + "[LB]\n";
 	}
-
-	public String genWriteMem(int dep, int taille) {
-		// TODO Auto-generated method stub
-		return "\tSTORE(" + taille + ") " + dep + "[LB]\n";
-	}
-    /*   ----->>>>>> qlq modif nader
+       
     	public String genReadMem(Emplacement e, int taille) {
 		return "\tLOAD(" + taille + ") " + e.getDep() + "["+e.getReg().getName()+"]" + "\n";
 	}
@@ -94,7 +89,7 @@ public class MTAM extends AbstractMachine {
      public String genAdr(Emplacement e) {
 		return "\tLOADA " + e.getDep() + "["+e.getReg().getName()+"]" + "\n";
 	}
-     */
+     
 	public String genReadIndirectMem(int taille) {
 		// TODO Auto-generated method stub
 		return "\tLOADI(" + taille + ")\n";
@@ -115,10 +110,6 @@ public class MTAM extends AbstractMachine {
 
 	public String genMalloc(int taille) {
 		return "\tLOADL " + taille + "\n" + "\tSUBR Malloc\n";
-	}
-
-	public String genAdr(int dep) {
-		return "\tLOADA " + dep + "[LB]\n";
 	}
 
 	public String genAdrField(int dep) {
