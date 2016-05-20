@@ -281,7 +281,7 @@ end}
 do
     FONCTION^dep:=BLOC^dep;    
     FONCTION^type := BLOC^type;
-    FONCTION^code := FONCTION^tam.genFonction(FONCTION^declid,PARFS^params.getTaille(),FONCTION^declt.getTaille(),BLOC^code); --A completer
+    FONCTION^code := FONCTION^tam.genFonction(FONCTION^declid, 0, BLOC^type.getTaille(),BLOC^code); --A completer : enregistrer le type de retour
 end}
  
  
