@@ -168,14 +168,6 @@ do
     ENTITES^dep:=ENTITES^hdep;
     ENTITES^code:="";
 end}
-
-
-ENTITES -> #dep;
-#dep{
-do
-    ENTITES ^dep:=ENTITES^hdep;
-    ENTITES^code := "";
-end}
  
 
 ENTITES ->  #dep1 ENTITE #dep ENTITES #gen;
@@ -711,13 +703,6 @@ end}
 --   error(erreur_type,null);
 --end 
 --end}
-
-AFFX -> #r;
-#r{
-do
-    AFFX^type:=new DTYPEImpl("void",0);
-    AFFX^code := "";
-end}
 
 
 AFFX -> #gen;
