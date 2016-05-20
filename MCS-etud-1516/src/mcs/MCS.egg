@@ -144,7 +144,6 @@ do
     end
     tds := new TDS();
     ENTITES^tds := tds;
-    ENTITES^tds := new TDS();
 end}
 -- ecrit le code dans un fichier
 #gen {
@@ -152,7 +151,7 @@ local
     tam : MTAM;
 do
     tam := new MTAM();
-    if (tds.chercherLocalement("main")= null) then
+    if (tds.chercherGlobalement("main")= null) then
         error(no_main);
     else
        machine.writeCode(PROGRAMME^source.getFileName(), tam.genCall("main")+ENTITES^code);
@@ -206,17 +205,14 @@ end }
 -- (commence par une minuscule)
 ENTITE ->  TYPE ident #tds DECL #gen;
 #tds{
+local 
+    i: INFO;
 do
     DECL^declid:=ident^txt;
     DECL^declt:=TYPE^type;
     DECL^tds:=ENTITE^tds;
     DECL^hdep:=ENTITE^hdep;
-end}
-#gen{
-local 
-    i: INFO;
-do
-    ENTITE^dep:= DECL^dep;  
+        
     i := ENTITE^tds.chercherLocalement(ident^txt);
     if i /= null then
        match i
@@ -226,8 +222,13 @@ do
                error(ident_existe_deja, ident^txt);
        end                                    
     end
-    ENTITE^code := ""; 
 end}
+#gen{
+do
+    ENTITE^dep:= DECL^dep;  
+    ENTITE^code := ""; 
+end
+}
 
 
 -- Variable
@@ -472,7 +473,7 @@ end}
 
 
 -- corps de fonction et bloc d'instructions
-BLOC ->  aco #tds INSTS #type acf ;
+BLOC ->  aco #tds INSTS #type acf;
 -- instructions
 #tds{
 do
@@ -486,7 +487,8 @@ do
   BLOC^type := INSTS^type;
   BLOC^code := INSTS^code; 
   BLOC^dep:=INSTS^dep;
-end}
+end
+}
 
 
 INSTS -> #gen  ;
@@ -525,7 +527,7 @@ do
 end}
 
 
-INST ->  TYPE ident #hAFFX AFFX pv #tds ;
+INST -> TYPE ident #hAFFX AFFX pv #tds ;
 #hAFFX{
 do
     AFFX^htype := TYPE^type;
@@ -535,20 +537,21 @@ local
     i: INFO;
     i2: INFOVAR;
 do
-  i := INST^tds.chercherLocalement(ident^txt);
-   if i /= null then
+    i := INST^tds.chercherLocalement(ident^txt);
+    if i /= null then
       error(ident_existe_deja, ident^txt);
-   elseif !(TYPE^type.compareTo(AFFX^type)) then
+    elseif !(TYPE^type.compareTo(AFFX^type)) then
         error(pas_instruction, TYPE^type);
-   else
+    else
         -- defintion d'un nouveau type
         i2:= new INFOVAR(TYPE^type,null);
         INST^tds.inserer(ident^txt,i2);  
         INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), null);
         INST^type := TYPE^type;
         INST^code := INST^tam.genDecl(ident^txt, i2, AFFX^code);
-   end
-end}
+    end
+end
+}
 
 
 -- instruction expression (affectation et appel de procedure)
