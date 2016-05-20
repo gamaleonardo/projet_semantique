@@ -146,7 +146,6 @@ do
     tds := new TDS();
     ENTITES^tds := tds;
     ENTITES^tds := new TDS();
-    ENTITES^hdep:= new Emplacement(0,null);
 end}
 -- ecrit le code dans un fichier
 #gen {
@@ -218,21 +217,17 @@ end}
 local 
     i: INFO;
 do
-    i := ENTITE^tds.chercherLocalement(ident^txt);
-    if i /= null then
-        error(ident_existe_deja, ident^txt);
-    end
     ENTITE^dep:= DECL^dep;  
     i := ENTITE^tds.chercherLocalement(ident^txt);
     if i /= null then
        match i
            with INFOFONC then
-               error(ident_existe_deja, ident^txt); -- il s'agit d'une fonction donc traitement de la surcharge (nombre de paramétres différents avec le meme nom de fonction)
-           else
+               error(Fonction_existe_deja, ident^txt); -- il s'agit d'une fonction donc traitement de la surcharge (nombre de paramétres différents avec le meme nom de fonction)
+           else 
                error(ident_existe_deja, ident^txt);
        end                                    
     end
-    ENTITE^code := ""; -- ???
+    ENTITE^code := ""; 
 end}
 
 
@@ -249,7 +244,7 @@ do
         -- creation d'une nouvelle variable et ajout dans la table des symboles
         i:= new INFOVAR(DECL^declt,DECL^hdep);
         call DECL^tds.inserer(DECL^declid,i);
-        DECL^dep:= new Emplacement (DECL^hdep.getDep() + DECL^declt.getTaille(), null);
+        DECL^dep:= new Emplacement (DECL^hdep.getDep() + DECL^declt.getTaille(), DECL^hdep.getReg());
     end 
 end}
 
@@ -286,7 +281,7 @@ end}
 do
     FONCTION^dep:=BLOC^dep;    
     FONCTION^type := BLOC^type;
-    FONCTION^code := ""; --A completer
+    FONCTION^code := FONCTION^tam.genFonction(FONCTION^declid,PARFS^params.getTaille(),FONCTION^declt.getTaille(),BLOC^code); --A completer
 end}
  
  
@@ -1171,7 +1166,7 @@ end}
 
 
 -- appel de sous-programme
-FX ->   paro ES parf FX  #gen; --Verifier les parametres || A ce niveau ??
+FX ->   paro ES parf FX  #gen; --Verifier les parametres A ce niveau ??
 #gen {
 do
   FX^type := FX1^type;
