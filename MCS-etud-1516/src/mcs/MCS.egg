@@ -18,13 +18,17 @@ inh machine : IMachine for
 --       , BASE, DEFS, DEF
 --         -- fin extension MCS
          ;
-inh tam : IMachine for
+inh tam : MTAM for
          PROGRAMME, ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX, DECL,
          E, AFFX, A, AX, R, RX, T, TX, F,FX
          ;
 -- ces attributs permettent de recuperer les instructions du code ASM inline       
 syn code_asm : STRING for ASM;
+-- la TDS courante
+inh tds_asm : TDS for ASM;
+
+
 syn code : STRING for 
          ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          ES, ESX, 
@@ -32,25 +36,20 @@ syn code : STRING for
          ;
 inh hcode : STRING for PTRS, F, FX;
 
--- la TDS courante
-inh tds_asm : TDS for ASM;
 
 inh tds : TDS for 
          ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
-
-
-
 syn type : DTYPEImpl for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
-syn params : Parametres for PARFS, PARFSX, ESX, ES;
-inh hparams: Parametres for PARF, PARFSX, E, ES, ESX, FX, F;
+syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
+inh hparams: PARAMETRES for PARF, PARFSX, E, ES, ESX, FX, F;
 
 
 
 
-inh htype: DTYPEImpl for PTRS, FX, AFFX, F;
+inh htype: DTYPE for PTRS, FX, AFFX, F;
 inh htyp: DTYPE for BLOC, INST, INSTS, SIX ;
 syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL;
 inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE;     
