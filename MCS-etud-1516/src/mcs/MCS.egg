@@ -540,8 +540,8 @@ do
     i := INST^tds.chercherLocalement(ident^txt);
     if i /= null then
       error(ident_existe_deja, ident^txt);
-    elseif !(TYPE^type.compareTo(AFFX^type)) then
-        error(pas_instruction, TYPE^type);
+    elseif (AFFX^type.getNom() /= "void" && TYPE^type.compareTo(AFFX^type) = false) then -- solution : si AFFX^type = void, c-est-a dire qu'on a fait une declaration sans l'affecter, ce qui n"est pas une erreur Leonardo
+        error(pas_meme_type, TYPE^type, AFFX^type); --bonne affichage de l'erreur
     else
         -- defintion d'un nouveau type
         i2:= new INFOVAR(TYPE^type,null);
@@ -565,7 +565,7 @@ end}
 #r{
 do
     INST^type := new DTYPEImpl("void", 0);
-    if ~(E^type.compareTo(new DTYPEImpl("void",0))) then
+    if (E^type.getAffectable() = false && E^type.getNom() /= "void") then -- le seul cas ou on peut executer une expression est si elle est une  appel a fonction Leonardo
         error(pas_instruction, E^type);
     end
 	INST^code := E^code;
@@ -709,7 +709,8 @@ AFFX -> #gen;
 do
     AFFX^type := new DTYPEImpl("void", 0);
     AFFX^code := "";
-end}
+end
+}
 
 -- relation
 A ->   R AX #r;
@@ -943,7 +944,7 @@ end}
 F -> chaine #type;
 #type{
 do
-   F^type := new DTYPEImpl("entier", 1);
+   F^type := new DTYPEImpl("caracteretc", 1); -- F^type := new DTYPEImpl("entier", 1); ca peut pas etre un entier !! Leonardo
    F^code := F^tam.genCst(chaine^txt); 
    F^code_est_adresse := false;
    F^adresse := -1;
@@ -953,7 +954,7 @@ end}
 F -> caractere #type;
 #type{
 do
-   F^type := new DTYPEImpl("entier", 1);
+   F^type := new DTYPEImpl("caractere", 1); -- F^type := new DTYPEImpl("entier", 1); ca peut pas etre un entier !! Leonardo
    F^code := F^tam.genCst(caractere^txt); 
    F^code_est_adresse := false;
    F^adresse := -1;
@@ -1072,7 +1073,7 @@ do
     if i /= null then
         match i with INFOVAR then
             c := i.getType();
-            F^type := c;
+            F^type := new DTYPEImpl(c.getNom(),c.getTaille(),true);
             F^code_est_adresse := true;
             F^code :=  F^tam.genAdr(i.getEmpl()) + FX^code; 
             F^adresse := i.getDep();
@@ -1122,7 +1123,7 @@ do
       FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
     end    
   else
-    error(Wrong_type, FX^htype);
+    error(Wrong_Type, FX^htype);
   end
 end}
 #gen {
@@ -1155,7 +1156,7 @@ do
       FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
     end    
   else
-    error(Wrong_type, FX^htype);
+    error(Wrong_Type, FX^htype);
   end
 end}
 #gen {

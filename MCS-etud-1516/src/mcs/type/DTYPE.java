@@ -12,11 +12,14 @@ public interface DTYPE {
 	 */
 	public String getNom();
 
+	public boolean getAffectable();
+	
 	/**
 	 * Fonction de compatibilité avec l'autre type
 	 * @param autre
 	 * @return
 	 */
+	
 	public boolean compareTo(DTYPE autre);
 
 	public String toString();
