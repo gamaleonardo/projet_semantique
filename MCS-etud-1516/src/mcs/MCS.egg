@@ -31,8 +31,8 @@ inh tds_asm : TDS for ASM;
 
 syn code : STRING for 
          ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
-         ES, ESX, 
-         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F        ;
+         ES, ESX, DECL, -- ajoute attribut code a DECL Leonardo
+         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F ;
 inh hcode : STRING for PTRS, F, FX;
 
 
@@ -225,8 +225,8 @@ do
 end}
 #gen{
 do
-    ENTITE^dep:= DECL^dep;  
-    ENTITE^code := ""; 
+    ENTITE^dep:= DECL^dep;
+    ENTITE^code :=DECL^code;  -- ENTITE^code:= "" modifie, avant ça devienait le code vide Leonardo
 end
 }
 
@@ -246,6 +246,7 @@ do
         call DECL^tds.inserer(DECL^declid,i);
         DECL^dep:= new Emplacement (DECL^hdep.getDep() + DECL^declt.getTaille(), DECL^hdep.getReg());
     end 
+    DECL^code:=""; -- initialisation de variable ajoute Leonardo
 end}
 
 
@@ -253,6 +254,7 @@ DECL -> #tds FONCTION #dep ;
 #dep{
 do
     DECL^dep:=FONCTION^dep;
+    DECL^code:=FONCTION^code; -- La declaration du code recoit le code de la fonction
 end}
 #tds{
 do
@@ -404,7 +406,7 @@ end}
 STYPE-> int #type;
 #type{
 do
-    STYPE^type := new DTYPEImpl("entier", 1);
+    STYPE^type := new DTYPEImpl("entier", 1); 
 end}
 
 STYPE-> char #type;
