@@ -1,0 +1,18 @@
+int main(){
+    int a = 3;
+    char c = 'a';
+    int y = 999;
+    // appel fonction
+    //char c = 'a';
+    //int y = 999;
+    int res = foo2 (y, (int) a);
+    // appel fonction bar
+    log("Hello, world ! ", bar(98,99));
+    // instruction conditionnelle
+    if (y ==0){
+       log("alors",y);}
+    else {
+       log("sinon", y);
+    }
+    return 0;
+}
