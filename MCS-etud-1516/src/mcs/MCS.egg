@@ -352,12 +352,14 @@ do
     iv := PARF^hparams.getParametre(ident^txt);
     t := iv.getType();
     if (t = null) then
-       iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
-       PARF^hparams.ajouterParametre(ident^txt,iv); -- A voir ?
+      -- iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
+      iv := new INFOVAR(TYPE^type, PARF^hdep);
+      PARF^tds.inserer(ident^txt,iv);
+       PARF^hparams.ajouterParametre(ident^txt,iv); 
     else
         error(parametre_existe_deja, ident^txt);
     end
-    PARF^dep:= new Emplacement (PARF^hdep.getDep() + TYPE^type.getTaille(), null);
+    PARF^dep:= new Emplacement (PARF^hdep.getDep() + TYPE^type.getTaille(), PARF^hdep.getReg());
  end}
 
 
@@ -467,7 +469,7 @@ do
         else
         it:= new CHAMP(ident^txt, TYPE^type, CHAMP^hdep);
         CHAMP^champs.inserer(it);
-        CHAMP^dep:= new Emplacement (CHAMP^hdep.getDep() + TYPE^type.getTaille(), null);     
+        CHAMP^dep:= new Emplacement (CHAMP^hdep.getDep() + TYPE^type.getTaille(), CHAMP^hdep.getReg());     
         end
     -- a completer generation de code
 end}
