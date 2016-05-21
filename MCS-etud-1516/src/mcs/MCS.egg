@@ -461,7 +461,7 @@ it:CHAMP;
 do
         it:=CHAMP^champs.chercher(ident^txt);
         if (it/=null) then
-           error(pram_exist,ident^txt);        
+           error(ident_existe_deja,ident^txt);        
         else
         it:= new CHAMP(ident^txt, TYPE^type, CHAMP^hdep);
         CHAMP^champs.inserer(it);
@@ -1058,7 +1058,7 @@ do
     -- A partir de la, l'adresse n'est plus gerable             
     F1^hadresse := -1;
    else
-    error(B_11, F^htype);
+    error(pas_un_pointeur, F^htype);
   end
 end}
 
