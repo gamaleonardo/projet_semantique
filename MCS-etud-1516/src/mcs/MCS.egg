@@ -613,18 +613,15 @@ do
 end}
 #gen {
 do
-if E^type.compareTo(new DTYPEImpl("entier", 1)) then
-    if BLOC^type.compareTo(SIX^type) then
+   if E^type.compareTo(new DTYPEImpl("entier", 1)) then
             INST^type := BLOC^type;
             INST^code := INST^tam.genIf(E^code, BLOC^code, SIX^code);
-    elseif  ~(BLOC^type.compareTo(INST^htype) || BLOC^type.compareTo(new DTYPEImpl("void", 0))) then
-            error(deux_type_diff, BLOC^type);
-    elseif  ~(SIX^type.compareTo(INST^htype) || SIX^type.compareTo(new DTYPEImpl("void", 0))) then
-            error(deux_type_diff, SIX^type);
-    else
-        INST^type := new DTYPEImpl("void",0) ;
-        end
-else error(la_condition_pas_reel, E^type);
+   -- elseif  ~(BLOC^type.compareTo(INST^htype))  then
+            --error(deux_type_diff, BLOC^type);
+   -- elseif  ~(SIX^type.compareTo(INST^htype)) then
+            --error(deux_type_diff, SIX^type);
+    else 
+         error(la_condition_pas_reel, E^type);
 end
 INST^dep:=new Emplacement(BLOC^dep.getDep()+SIX^dep.getDep(), BLOC^dep.getReg());
 end}
