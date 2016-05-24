@@ -150,12 +150,13 @@ end}
 local
     tam : MTAM;
 do
+    write tds;
     tam := new MTAM();
     if (tds.chercherGlobalement("main")= null) then
         error(no_main);
     else
        machine.writeCode(PROGRAMME^source.getFileName(), tam.genCall("main")+ENTITES^code);
-    end   
+    end
 end}
 
 
@@ -1014,7 +1015,20 @@ end}
 
 
 -- expression parenthesee
---F ->  paro E parf FX ; --A FAIRE
+F ->  paro E parf #h FX #gen;
+#h{
+do
+    FX^hcode_est_adresse := true;
+end
+}
+#gen{
+do
+    F^type := FX^type;
+    F^code_est_adresse := true; -- ??
+    F^adresse := FX^adresse;
+    F^code := FX^code;
+end
+} 
 
 F -> paro #dep TYPE parf  F #gen;      --cast ??? nader
 #dep{
