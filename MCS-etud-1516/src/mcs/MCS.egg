@@ -46,7 +46,7 @@ syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX,
 inh htype: DTYPE for BLOC, INST, INSTS, SIX, PTRS, FX, AFFX, F;
           
 syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
-inh hparams: PARAMETRES for PARF, PARFSX, E, ES, ESX, FX, F;
+inh hparams: PARAMETRES for PARFS, PARF, PARFSX, E, ES, ESX, FX, F;
 
 syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL;
 inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE;     
@@ -266,9 +266,15 @@ end}
 
 
 -- Fonction
-FONCTION ->  paro PARFS parf #tds BLOC #gen ;
+FONCTION ->  paro #param PARFS parf #tds BLOC #gen ;
 global
     ifonc:INFOFONC;
+#param{
+do
+PARFS^hparams:=new PARAMETRES();
+end}
+
+
 #tds{
 local
     tds:TDS;
@@ -279,6 +285,7 @@ do
     BLOC^infonc:=ifonc;
     BLOC^hdep:=PARFS^dep;
     BLOC^htype:= null; --type pour un BLOC ?? 
+    
 end}
 #gen{
 do
@@ -293,8 +300,9 @@ end}
 PARFS ->#param;
 #param{
 do
-    PARFS^params := new PARAMETRES();
-    PARFS^params :=null;
+    --PARFS^params := new PARAMETRES();
+    --PARFS^params :=null;
+    PARFS^params:=PARFS^hparams; -- medali
     PARFS^dep:=PARFS^hdep;
 end}
 
@@ -302,16 +310,17 @@ end}
 PARFS -> #init PARF #hdep PARFSX #fin;
 #init{
 local
-    p : PARAMETRES;
+    --p : PARAMETRES;
 do
-    p := new PARAMETRES();
-    PARF^hparams := p;
-    PARFSX^hparams := p;
+    --p := new PARAMETRES();
+    --PARF^hparams := p;
+    --PARFSX^hparams := p;
     PARF^hdep:=PARFS^hdep;
 end}
 #hdep{
 do 
     PARFSX^hdep:=PARF^dep;
+    
 end}
 #fin{
 do
@@ -351,8 +360,8 @@ local
     iv : INFOVAR;
 do
     iv := PARF^hparams.getParametre(ident^txt);
-    t := iv.getType();
-    if (t = null) then
+    --t := iv.getType();
+    if (iv = null) then
       -- iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
       iv := new INFOVAR(TYPE^type, PARF^hdep);
       PARF^tds.inserer(ident^txt,iv);
