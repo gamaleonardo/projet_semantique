@@ -43,7 +43,7 @@ inh tds : TDS for
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
-inh htype: DTYPE for BLOC, INST, INSTS, SIX, PTRS, FX, AFFX, F;
+inh htype: DTYPE for  AFFX ,PTRS, FX, F;
           
 syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
 inh hparams: PARAMETRES for PARFS, PARF, PARFSX, E, ES, ESX, FX, F;
@@ -284,7 +284,6 @@ do
     FONCTION^tds.inserer(FONCTION^declid,ifonc);
     BLOC^infonc:=ifonc;
     BLOC^hdep:=PARFS^dep;
-    BLOC^htype:= null; --type pour un BLOC ?? 
     
 end}
 #gen{
@@ -518,8 +517,6 @@ INSTS -> #htype INST #hdep INSTS #gen  ;
 -- declaration de variable locale avec ou sans init 
 #htype{
 do
-    INST^htype:=INSTS^htype;    -- inutile car la transmission se fait automatiquement (MA)
-    INSTS1^htype:=INSTS^htype;
     INST^hdep:=INSTS^hdep;
 end}
 #hdep{
@@ -615,8 +612,6 @@ end
 do
     BLOC^tds := new TDS(INST^tds);
     SIX^tds := new TDS(INST^tds);
-    BLOC^htype:=INST^htype;
-    SIX^htype:=INST^htype;
     BLOC^hdep:=INST^hdep;
     SIX^hdep:=INST^hdep;
     BLOC^infonc:= new INFOFONC(null, null, null, null);
