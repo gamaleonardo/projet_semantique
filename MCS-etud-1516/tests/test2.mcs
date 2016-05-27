@@ -15,7 +15,27 @@
 // variable globale
 //Point p;
 
+int foo (int x, int y) {
+   int z = x * y;
+   return 4;
+}
+//int bach ( bool h, bool m){
+ //return 5;
+ //} 
+
+int nader(int x, int y , int z , int f, int g) {
+ int h = x*y;
+ return 5;
+}
+
 int main(){
     int x = 1;
+   
+   //int tt=0;
+   //tt=99 + 9;
+   
+    foo(1,2);
+    nader(4,8,5,8,7);
+   // bach(true,false);
     return 0;
 }

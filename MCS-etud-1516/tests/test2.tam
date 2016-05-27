@@ -1,0 +1,35 @@
+; Generated code for tests/test2.mcs.
+; Do not modify by hand
+; Appel a main
+	CALL(SB) _main
+_foo:
+   ; declaration de z en 0/LB taille = 1
+	LOADA 0[SB]
+	LOADA 1[SB]
+	SUBR Mul 
+; fin de declaration de z
+	LOADL 4
+	RETURN (0) 1
+_nader:
+   ; declaration de h en 0/LB taille = 1
+nullnull	SUBR Mul 
+; fin de declaration de h
+	LOADL 5
+	RETURN (0) 1
+_main:
+   ; declaration de x en 0/LB taille = 1
+	LOADL 1
+; fin de declaration de x
+	LOADL 1
+	LOADL 2
+; Appel a _foo
+	CALL(SB) __foo
+	LOADL 4
+	LOADL 8
+	LOADL 5
+	LOADL 8
+	LOADL 7
+; Appel a _nader
+	CALL(SB) __nader
+	LOADL 0
+	RETURN (0) 1
