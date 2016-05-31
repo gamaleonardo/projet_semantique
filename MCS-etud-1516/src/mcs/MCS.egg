@@ -924,19 +924,19 @@ do
 OPMUL -> mult #gen ;
 #gen{
 do
-    OPMUL^code := "\tSUBR Mul \n";
+    OPMUL^code := "\tSUBR IMul \n";
 end}
 
 OPMUL -> div #gen ;
 #gen{
 do
-    OPMUL^code := "\tSUBR Div \n";
+    OPMUL^code := "\tSUBR IDiv \n";
 end}
 
 OPMUL -> mod #gen ;
 #gen{
 do
-    OPMUL^code := "\tSUBR Mod \n";
+    OPMUL^code := "\tSUBR IMod \n";
 end}
 
 OPMUL -> et #gen ;
@@ -1077,8 +1077,6 @@ do
   with POINTEUR then
     p := F^htype;
     F1^htype := p.getType();
-    -- on lit le contenu
-    --FX1^hcode_est_adresse := FX^hcode_est_adresse;
     code := F^tam.genComment("acces zone pointee : ");
     if F^hadresse != -1 then
       code := code + F^tam.genReadMem(F^hadresse, p.getTaille());
