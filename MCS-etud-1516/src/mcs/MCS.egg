@@ -43,11 +43,7 @@ inh tds : TDS for
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
-<<<<<<< HEAD
 inh htype: DTYPE for PTRS, FX, AFFX;
-=======
-inh htype: DTYPE for  AFFX ,PTRS, FX, F;
->>>>>>> branch 'master' of https://github.com/gamaleonardo/projet_semantique.git
           
 syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
 inh hparams: PARAMETRES for PARFS, PARF, PARFSX, E, ES, ESX, FX, F;
@@ -860,13 +856,13 @@ end}
 OPADD -> plus #gen;
 #gen{
 do
-    OPADD^code := "\tSUBR Add \n";
+    OPADD^code := "\tSUBR IAdd \n";
 end}
 
 OPADD -> moins #gen;
 #gen{
 do
-    OPADD^code := "\tSUBR Sub \n";
+    OPADD^code := "\tSUBR ISub \n";
 end}
 
 OPADD -> ou #gen;
@@ -1081,32 +1077,7 @@ do
   F^code :=  F1^code;
   F^adresse := F1^adresse;
 end}
-<<<<<<< HEAD
 
-=======
-#a {
-local
-p : POINTEUR ;
-code : STRING;
-do
-  match F^htype
-  with POINTEUR then
-    p := F^htype;
-    F1^htype := p.getType();
-    code := F^tam.genComment("acces zone pointee : ");
-    if F^hadresse != -1 then
-      code := code + F^tam.genReadMem(F^hadresse, p.getTaille());
-    else
-      code := code + F^hcode + F^tam.genReadIndirectMem(1);
-    end
-    F1^hcode := code ;
-    -- A partir de la, l'adresse n'est plus gerable             
-    F1^hadresse := -1;
-   else
-    error(pas_un_pointeur, F^htype);
-  end
-end}
->>>>>>> branch 'master' of https://github.com/gamaleonardo/projet_semantique.git
 
 F -> ident #h FX #gen;
 global 
@@ -1352,3 +1323,4 @@ end}
 --F -> null2;
 --F -> new identc IDC paro ES parf ;
 end
+

@@ -39,11 +39,11 @@ inh hcode : STRING for PTRS, F, FX;
 inh tds : TDS for 
          ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
-         E, AFFX, A, AX, R, RX, T, TX, F,FX
+         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
-inh htype: DTYPE for  AFFX ,PTRS, FX, F;
+inh htype: DTYPE for PTRS, FX, AFFX;
           
 syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
 inh hparams: PARAMETRES for PARFS, PARF, PARFSX, E, ES, ESX, FX, F;
@@ -150,7 +150,7 @@ end}
 local
     tam : MTAM;
 do
-    write tds;
+    --write tds;
     tam := new MTAM();
     if (tds.chercherGlobalement("main")= null) then
         error(no_main);
@@ -424,15 +424,23 @@ STYPE-> char #type;
 -- nom de type (commence par une majuscule)
 #type{
 do
-    STYPE^type := new DTYPEImpl("caractere", 1);
+    STYPE^type := new DTYPEImpl("char", 1);
   
 end}
 
 STYPE -> identc #type;
+global
+i:INFO;
 -- et struct ?
 #type{
+
 do
-    STYPE^type := new DTYPEImpl("caracteretc", 1);
+    i := STYPE^tds.chercherGlobalement(identc^txt);
+    if i/= null then
+    STYPE^type := i.getType();
+    else 
+      error(type_inconnu,identc^txt);   
+    end  
 end}
 
 STYPE -> struct #1 aco CHAMPS acf #2  ;
@@ -442,7 +450,8 @@ lt : LCHAMPS;
 do
     lt := new LCHAMPS();    
     CHAMPS^champs :=lt;
-    CHAMPS^hdep:= null; 
+    CHAMPS^hdep:= STYPE^hdep;
+    
 end}
 #2{
 do
@@ -552,7 +561,7 @@ do
     if i /= null then
       error(ident_existe_deja, ident^txt);
     elseif (AFFX^type.getNom() /= "void" && TYPE^type.compareTo(AFFX^type) = false) then -- solution : si AFFX^type = void, c-est-a dire qu'on a fait une declaration sans l'affecter, ce qui n"est pas une erreur Leonardo
-        error(pas_meme_type, TYPE^type, AFFX^type); --bonne affichage de l'erreur
+        error(pas_meme_type, TYPE^type, AFFX^type); --bon affichage de l'erreur
     else
         -- defintion d'un nouveau type
         i2:= new INFOVAR(TYPE^type,null);
@@ -576,11 +585,12 @@ end}
 #r{
 do
     INST^type := new DTYPEImpl("void", 0);
-    if (E^type.getAffectable() = false && E^type.getNom() /= "void") then -- le seul cas ou on peut executer une expression est si elle est une  appel a fonction Leonardo
-        error(pas_instruction, E^type);
-    end
-	INST^code := E^code;
-	INST^dep := new Emplacement(INST^hdep.getDep() + E^type.getTaille(), INST^hdep.getReg());
+    write "\n pas_isnt: "+ E^type;
+    --if (E^type.getAffectable() = false && E^type.getNom() /= "void") then -- le seul cas ou on peut executer une expression est si elle est une  appel a fonction Leonardo
+    --    error(pas_instruction, E^type);
+   -- end
+    INST^code := E^code;
+    INST^dep := new Emplacement(INST^hdep.getDep() + E^type.getTaille(), INST^hdep.getReg());
 end}
 
 
@@ -595,9 +605,9 @@ end
 }
 #type{
 do
-	INST^type := BLOC^type;
-	INST^dep:=BLOC^dep;
-	INST^code := BLOC^code;
+    INST^type := BLOC^type;
+    INST^dep:=BLOC^dep;
+    INST^code := BLOC^code;
 end}
 
 
@@ -684,15 +694,15 @@ do
  if AFFX^type.compareTo(new DTYPEImpl("void", 0)) then
      E^type := A^type;  
      E^code := A^code + AFFX^code;
-     write AFFX^code;
-     write "test1";
+    -- write AFFX^code;
+    -- write "test1";
  elseif A^type.compareTo(AFFX^type) then
      E^type := A^type;
      E^code := AFFX^code  + E^tam.genWriteIndirectMem(A^type.getTaille()); ---- A^code
-     write "test2";
+     
  else
-      error(pas_meme_type, A^type); 
-     write "test3";
+      error(pas_meme_type, A^type, AFFX^type); 
+   
  end
 end}
 --E ->   A  #type AFFX #type2 ;
@@ -751,7 +761,7 @@ end}
 AX -> OPREL R #r;
 #r{
 do
-    if R^type.compareTo(new DTYPEImpl("entier",1)) || R^type.compareTo(new DTYPEImpl("caractere",1))  then 
+    if R^type.compareTo(new DTYPEImpl("entier",1)) || R^type.compareTo(new DTYPEImpl("char",1))  then 
         AX^type:=R^type;
         AX^code := R^code + OPREL^code;
     else
@@ -846,13 +856,13 @@ end}
 OPADD -> plus #gen;
 #gen{
 do
-    OPADD^code := "\tSUBR Add \n";
+    OPADD^code := "\tSUBR IAdd \n";
 end}
 
 OPADD -> moins #gen;
 #gen{
 do
-    OPADD^code := "\tSUBR Sub \n";
+    OPADD^code := "\tSUBR ISub \n";
 end}
 
 OPADD -> ou #gen;
@@ -868,7 +878,6 @@ T -> #h F  TX #r ;
 do  --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
-  F^htype := null;
   F^hadresse := -1;
 end
 }
@@ -883,8 +892,8 @@ do
  else
       error(mulTypes_diff, F^type); 
  end
- --write F^code;
- write TX^code;
+ 
+
 end}
 
 TX ->   OPMUL   #hp F TX #r ;
@@ -892,7 +901,6 @@ TX ->   OPMUL   #hp F TX #r ;
 do --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
-  F^htype := null;
   F^hadresse := -1;
      
  
@@ -906,7 +914,7 @@ do
           TX^code := F^code +  TX1^code + OPMUL^code;
     
     else
-     write "a333";
+     
         error(pas_reel, F^type); 
  end
 
@@ -962,7 +970,7 @@ end}
 F -> chaine #type;
 #type{
 do
-   F^type := new DTYPEImpl("caracteretc", 1); -- F^type := new DTYPEImpl("entier", 1); ca peut pas etre un entier !! Leonardo
+   F^type := new DTYPEImpl("string", 1); -- F^type := new DTYPEImpl("entier", 1); ca peut pas etre un entier !! Leonardo
    F^code := F^tam.genCst(chaine^txt); 
    F^code_est_adresse := false;
    F^adresse := -1;
@@ -972,7 +980,7 @@ end}
 F -> caractere #type;
 #type{
 do
-   F^type := new DTYPEImpl("caractere", 1); -- F^type := new DTYPEImpl("entier", 1); ca peut pas etre un entier !! Leonardo
+   F^type := new DTYPEImpl("char", 1); -- F^type := new DTYPEImpl("entier", 1); ca peut pas etre un entier !! Leonardo
    F^code := F^tam.genCst(caractere^txt); 
    F^code_est_adresse := false;
    F^adresse := -1;
@@ -1024,6 +1032,7 @@ F ->  paro E parf #h FX #gen;
 #h{
 do
     FX^hcode_est_adresse := true;
+    FX^htype:=E^type;
 end
 }
 #gen{
@@ -1060,7 +1069,7 @@ do
     end
 end}
 
-F -> mult #a  F #gen;
+F -> mult F #gen;
 #gen {
 do
   F^type := F1^type;
@@ -1068,41 +1077,24 @@ do
   F^code :=  F1^code;
   F^adresse := F1^adresse;
 end}
-#a {
-local
-p : POINTEUR ;
-code : STRING;
-do
-  match F^htype
-  with POINTEUR then
-    p := F^htype;
-    F1^htype := p.getType();
-    code := F^tam.genComment("acces zone pointee : ");
-    if F^hadresse != -1 then
-      code := code + F^tam.genReadMem(F^hadresse, p.getTaille());
-    else
-      code := code + F^hcode + F^tam.genReadIndirectMem(1);
-    end
-    F1^hcode := code ;
-    -- A partir de la, l'adresse n'est plus gerable             
-    F1^hadresse := -1;
-   else
-    error(pas_un_pointeur, F^htype);
-  end
-end}
+
 
 F -> ident #h FX #gen;
+global 
+  c : DTYPE; 
+  i : INFO;
+  e : Emplacement;
 #gen {
-local
-    i : INFO;
-    c : DTYPE;
-    e : Emplacement;
+
+
 do
     i := F^tds.chercherGlobalement(ident^txt);
+    --write i;
     if i /= null then
+      
         match i with INFOVAR then
             c := i.getType();
-            F^type := new DTYPEImpl(c.getNom(),c.getTaille(),true);
+            F^type := FX^type;
             F^code_est_adresse := true;
             F^code :=  F^tam.genAdr(i.getEmpl()) + FX^code; 
             F^adresse := i.getDep();
@@ -1119,7 +1111,10 @@ do
 end}
 #h {
 do
+   i := F^tds.chercherGlobalement(ident^txt);
+    c := i.getType();
   FX^hcode_est_adresse := false;
+  FX^htype:=c;      
 end}
 
 FX ->#gen ;
@@ -1139,17 +1134,23 @@ local
  c : CHAMP;
  lc : LCHAMPS;
 do
+ write   FX^htype;
   match FX^htype
   with STRUCT then
+  write "blabla";
     s := FX^htype;
     lc := s.getChamps();
+   
     c := lc.chercher(ident^txt);
+   
     if c = null then
       error(Unaffected_ident, ident^txt) ;
     else
+    write c.getType();
       FX1^htype := c.getType();        
       FX1^hcode_est_adresse := false;
       FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
+      write FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
     end    
   else
     error(Wrong_Type, FX^htype);
@@ -1322,3 +1323,4 @@ end}
 --F -> null2;
 --F -> new identc IDC paro ES parf ;
 end
+
