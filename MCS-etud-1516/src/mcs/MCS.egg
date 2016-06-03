@@ -395,7 +395,7 @@ end}
 PTRS -> mult PTRS #type;
 --#gencode {
 --do
-    -- il faut verifié si les params sont déclaré : il faut ajouté un attribut hérité??????
+    -- il faut verifié si les params sont déclaré : il faut ajouté un attribut hérité??????-Nader
     --PTRS1^hcode := PTRS^hcode+PTRS^tam.genMalloc(1);
 --end}
 #type {
@@ -560,6 +560,7 @@ end}
 local
     i: INFO;
     i2: INFOVAR;
+    t:DTYPE;
 do
  
    
@@ -575,7 +576,12 @@ do
         INST^tds.inserer(ident^txt,i2);  
         INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), INST^hdep.getReg());
         INST^type := TYPE^type;
-        INST^code := INST^tam.genDecl(ident^txt, i2, AFFX^code);
+        match TYPE^type with POINTEUR then
+            t:= TYPE^type.getType();
+            INST^code := INST^tam.genMalloc(t.getTaille());
+        else
+            INST^code := INST^tam.genDecl(ident^txt, i2, AFFX^code);
+        end
     end
 end
 }
@@ -1318,4 +1324,3 @@ end}
 --F -> null2;
 --F -> new identc IDC paro ES parf ;
 end
-
