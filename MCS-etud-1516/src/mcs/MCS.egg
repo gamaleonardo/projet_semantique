@@ -213,7 +213,7 @@ do
     DECL^declt:=TYPE^type;
     DECL^tds:=ENTITE^tds;
     DECL^hdep:=ENTITE^hdep;
-        
+    
     i := ENTITE^tds.chercherLocalement(ident^txt);
     if i /= null then
        match i
@@ -262,6 +262,7 @@ do
     FONCTION^declid:=DECL^declid;
     FONCTION^declt:=DECL^declt;
     FONCTION^tds := DECL^tds;
+    FONCTION^hdep := new Emplacement(0, new Register("LB",5));
 end}
 
 
@@ -274,7 +275,6 @@ do
 PARFS^hparams:=new PARAMETRES();
 end}
 
-
 #tds{
 local
     tds:TDS;
@@ -282,9 +282,7 @@ do
     tds:=new TDS(FONCTION^tds);
     ifonc:= new INFOFONC(FONCTION^declt,null,PARFS^params,tds);
     FONCTION^tds.inserer(FONCTION^declid,ifonc);
-    BLOC^infonc:=ifonc;
-    BLOC^hdep:=PARFS^dep;
-    
+    BLOC^infonc:=ifonc;    
 end}
 #gen{
 do
@@ -499,9 +497,7 @@ BLOC ->  aco #tds INSTS #type acf;
 -- instructions
 #tds{
 do
-    
     INSTS^tds := BLOC^infonc.getTDS();
-    INSTS^hdep:=BLOC^hdep;
 end
 }
 #type{
@@ -563,11 +559,9 @@ do
     elseif (AFFX^type.getNom() /= "void" && TYPE^type.compareTo(AFFX^type) = false) then -- solution : si AFFX^type = void, c-est-a dire qu'on a fait une declaration sans l'affecter, ce qui n"est pas une erreur Leonardo
         error(pas_meme_type, TYPE^type, AFFX^type); --bon affichage de l'erreur
     else
-        -- defintion d'un nouveau type
-        write "\n cb de passage :" + ident^txt; 
+        -- defintion d'un nouveau type 
         i2:= new INFOVAR(TYPE^type,INST^hdep);
         INST^tds.inserer(ident^txt,i2);  
-        write i2 + "\n";
         INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), INST^hdep.getReg());
         INST^type := TYPE^type;
         INST^code := INST^tam.genDecl(ident^txt, i2, AFFX^code);

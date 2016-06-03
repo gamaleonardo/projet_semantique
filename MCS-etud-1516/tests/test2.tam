@@ -12,7 +12,7 @@ _foo:
 	RETURN (0) 1
 _nader:
    ; declaration de h en 0/LB taille = 1
-nullnull	SUBR Mul 
+nullnull	SUBR iadd
 ; fin de declaration de h
 	LOADL 5
 	RETURN (0) 1
