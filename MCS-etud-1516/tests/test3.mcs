@@ -3,17 +3,12 @@ int w ;
 int main(){
     int c = 12;
     int y = 999;
-    // appel fonction
-    //char c = 'a';
-    //int y = 999;
-    //int res = foo2 (y, (int) a);
-    // appel fonction bar
-    log("Hello, world ! ", bar(98,99));
-    // instruction conditionnelle
+
     if (y == 1){
-       log("alors",y);}
+       int d = 5;
+   }
     else {
-       log("sinon", y);
+       int d = 15;
     }
     return 0;
 }

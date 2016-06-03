@@ -496,8 +496,16 @@ end}
 BLOC ->  aco #tds INSTS #type acf;
 -- instructions
 #tds{
+local
+i : INFOFONC;
 do
-    INSTS^tds := BLOC^infonc.getTDS();
+    i := BLOC^infonc;
+    if i /= null then
+        INSTS^tds := BLOC^infonc.getTDS();
+    else 
+        INSTS^tds := BLOC^tds;
+    end
+        
 end
 }
 #type{
@@ -553,11 +561,15 @@ local
     i: INFO;
     i2: INFOVAR;
 do
-    i := INST^tds.chercherLocalement(ident^txt);
+ 
+   
+    i := INST^tds.chercherGlobalement(ident^txt);
+     write "\n code AFFX :"+ AFFX^code+ " // " + ident^txt;
     if i /= null then
       error(ident_existe_deja, ident^txt);
-    elseif (AFFX^type.getNom() /= "void" && TYPE^type.compareTo(AFFX^type) = false) then -- solution : si AFFX^type = void, c-est-a dire qu'on a fait une declaration sans l'affecter, ce qui n"est pas une erreur Leonardo
-        error(pas_meme_type, TYPE^type, AFFX^type); --bon affichage de l'erreur
+      
+    --elseif (AFFX^type.getNom() /= "void" || TYPE^type.compareTo(AFFX^type) = false) then -- solution : si AFFX^type = void, c-est-a dire qu'on a fait une declaration sans l'affecter, ce qui n'est pas une erreur-Leonardo
+    --    error(pas_meme_type, TYPE^type, AFFX^type); --bon affichage de l'erreur
     else
         -- defintion d'un nouveau type 
         i2:= new INFOVAR(TYPE^type,INST^hdep);
@@ -595,7 +607,7 @@ INST -> #tds BLOC #type  ;
 do
     BLOC^tds := new TDS(INST^tds);
     BLOC^hdep:=INST^hdep;
-    BLOC^infonc:= new INFOFONC(null,null, null, null);
+    BLOC^infonc:= null;
 end
 }
 #type{
@@ -619,14 +631,14 @@ do
     SIX^tds := new TDS(INST^tds);
     BLOC^hdep:=INST^hdep;
     SIX^hdep:=INST^hdep;
-    BLOC^infonc:= new INFOFONC(null, null, null, null);
+    BLOC^infonc:= null;
 end}
 #gen {
 do
    if E^type.compareTo(new DTYPEImpl("entier", 1)) then
             INST^type := BLOC^type;
             INST^code := INST^tam.genIf(E^code, BLOC^code, SIX^code);
-            write  "\n debut :\n" + "E :"+ E^code + "\n" + "bloc:" + BLOC^code + "\n six" +SIX^code + "\n fin"; 
+            write  "\n debut :\n" + "E :"+ E^code + "\n" + "bloc: " + BLOC^code + "\n six: " +SIX^code + "\n fin"; 
    -- elseif  ~(BLOC^type.compareTo(INST^htype))  then
             --error(deux_type_diff, BLOC^type);
    -- elseif  ~(SIX^type.compareTo(INST^htype)) then
@@ -641,7 +653,7 @@ SIX ->   sinon #hdep BLOC #r ;
 #hdep{
 do
     BLOC^hdep:=SIX^hdep;
-    BLOC^infonc := new INFOFONC(null,null, null, null);
+    BLOC^infonc := null;
 end}
 #r {
 do
@@ -775,31 +787,31 @@ end}
 OPREL -> sup #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR Gtr \n";
+    OPREL^code := "\tSUBR iGtr \n";
 end}
 
 OPREL -> infeg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR Leq \n";
+    OPREL^code := "\tSUBR iLeq \n";
 end}
 
 OPREL -> supeg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR Geq \n";
+    OPREL^code := "\tSUBR iGeq \n";
 end}
 
 OPREL -> eg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR Eq \n";
+    OPREL^code := "\tSUBR ieq \n";
 end}
 
 OPREL -> neg #gen;
 #gen{
 do
-    OPREL^code := "\tSUBR Neq \n";
+    OPREL^code := "\tSUBR iNeq \n";
 end}
 
 R ->  T  RX #r ;
@@ -1076,7 +1088,6 @@ global
 do
     i := F^tds.chercherGlobalement(ident^txt);
     if i /= null then
-    write "\n test :" + i + " nom ident :"+ ident^txt;
         match i with INFOVAR then
             c := i.getType();
             F^type := FX^type;

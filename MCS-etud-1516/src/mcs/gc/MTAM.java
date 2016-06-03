@@ -103,9 +103,9 @@ public class MTAM extends AbstractMachine {
 	public String genIf(String code, String code2, String code3) {
 		String sinon = genEtiq();
 		String fin = genEtiq();
-		return "\t; if\n" + code + "\n" + "\tJUMPIF(0) " + sinon + "\n" + code2
-				+ "\n" + "\tJUMP " + fin + "\n" + sinon + "\n" + code3 + "\n"
-				+ fin + "\n" + "\t; fin if\n";
+		return "\t; if\n" + code + "\n" + "\tJUMPIF(0) " + sinon  + "\n" + code2
+				+ "\n" + "\tJUMP " + fin + "\n" + sinon + ":" + "\n" + code3 + "\n"
+				+ fin + ":" + "\n" + "\t; fin if\n";
 	}
 
 	public String genMalloc(int taille) {
