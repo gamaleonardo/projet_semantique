@@ -247,7 +247,7 @@ do
         call DECL^tds.inserer(DECL^declid,i);
         DECL^dep:= new Emplacement (DECL^hdep.getDep() + DECL^declt.getTaille(), DECL^hdep.getReg());
     end 
-    DECL^code:=""; -- initialisation de variable ajoute Leonardo
+    DECL^code:=""; -- initialisation de variable 
 end}
 
 
@@ -543,7 +543,7 @@ do
         INSTS^type := INST^type; --type de premier INST non void rencontre
     end
     INSTS^dep:=INSTS1^dep;
-    INSTS^code:=INST^code + INSTS1^code;   
+    INSTS^code:=INST^code + INSTS1^code;  
 end}
 
 
@@ -564,9 +564,11 @@ do
         error(pas_meme_type, TYPE^type, AFFX^type); --bon affichage de l'erreur
     else
         -- defintion d'un nouveau type
-        i2:= new INFOVAR(TYPE^type,null);
+        write "\n cb de passage :" + ident^txt; 
+        i2:= new INFOVAR(TYPE^type,INST^hdep);
         INST^tds.inserer(ident^txt,i2);  
-        INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), null);
+        write i2 + "\n";
+        INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), INST^hdep.getReg());
         INST^type := TYPE^type;
         INST^code := INST^tam.genDecl(ident^txt, i2, AFFX^code);
     end
@@ -585,7 +587,6 @@ end}
 #r{
 do
     INST^type := new DTYPEImpl("void", 0);
-    write "\n pas_isnt: "+ E^type;
     --if (E^type.getAffectable() = false && E^type.getNom() /= "void") then -- le seul cas ou on peut executer une expression est si elle est une  appel a fonction Leonardo
     --    error(pas_instruction, E^type);
    -- end
@@ -631,6 +632,7 @@ do
    if E^type.compareTo(new DTYPEImpl("entier", 1)) then
             INST^type := BLOC^type;
             INST^code := INST^tam.genIf(E^code, BLOC^code, SIX^code);
+            write  "\n debut :\n" + "E :"+ E^code + "\n" + "bloc:" + BLOC^code + "\n six" +SIX^code + "\n fin"; 
    -- elseif  ~(BLOC^type.compareTo(INST^htype))  then
             --error(deux_type_diff, BLOC^type);
    -- elseif  ~(SIX^type.compareTo(INST^htype)) then
@@ -705,14 +707,6 @@ do
    
  end
 end}
---E ->   A  #type AFFX #type2 ;
---#type2{
---do
---    if ~(A^type.compareTo(AFFX^type)) then
---        error(pas_instruction, A^type);
---    end
---end}
--- affectation
 
 AFFX -> affect A #r;
 #r{
@@ -1085,18 +1079,16 @@ global
   i : INFO;
   e : Emplacement;
 #gen {
-
-
 do
     i := F^tds.chercherGlobalement(ident^txt);
-    --write i;
     if i /= null then
-      
+    write "\n test :" + i + " nom ident :"+ ident^txt;
         match i with INFOVAR then
             c := i.getType();
             F^type := FX^type;
             F^code_est_adresse := true;
-            F^code :=  F^tam.genAdr(i.getEmpl()) + FX^code; 
+            F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
+            --F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
             F^adresse := i.getDep();
         end
         match i with INFOFONC then

@@ -112,8 +112,8 @@ public class MTAM extends AbstractMachine {
 		return "\tLOADL " + taille + "\n" + "\tSUBR Malloc\n";
 	}
 
-	public String genAdrField(int dep) {
-		return "\t;Calcul deplacement struct " + dep + "\n" + "\tLOADL " + dep
+	public String genAdrField(Emplacement e) {
+		return "\t;Calcul deplacement struct " + e.getDep() + "\n" + "\tLOADL " + e.getDep()
 				+ "\n\tSUBR Iadd\n";
 	}
 
