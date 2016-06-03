@@ -1,3 +1,64 @@
 ; Generated code for tests/mc.mcs.
 ; Do not modify by hand
-; no code
+; Appel a main
+	CALL(SB) main
+_foo:
+   ; declaration de xxx en 0/LB taille = 1
+; fin de declaration de xxx
+	LOADL 100
+	STOREI(1)
+   ; declaration de a en 0/LB taille = 1
+	LOAD(1) -1[LB]
+	LOAD(1) -2[LB]
+	SUBR IAdd 
+; fin de declaration de a
+null	RETURN (0) 1
+_bar:
+   ; declaration de pt en 0/LB taille = 1
+; fin de declaration de pt
+nullnull   ; declaration de u en 0/LB taille = 1
+	LOADL 301
+; fin de declaration de u
+   ; declaration de v en 0/LB taille = 1
+	LOADL 401
+; fin de declaration de v
+   ; declaration de result en 0/LB taille = 1
+; fin de declaration de result
+	LOADL 33
+	LOAD(1) -1[LB]
+	SUBR IMul 
+	LOAD(1) -2[LB]
+	SUBR ISub 
+	SUBR iGtr 
+; Appel a _foo
+	CALL(SB) _foo
+	STOREI(1)
+	LOAD(1) 2[LB]
+	RETURN (0) 1
+; inline code_asm
+
+
+	CALL (LB) _main
+	; appel au point d'entree du programme
+
+	HALT
+	; arret de la machine
+
+_malloc:
+   ; declaration de adr en 0/LB taille = 1
+; fin de declaration de adr
+; inline code_asm
+
+
+	LOAD (1) -1[LB]
+	; acces au parametre taille
+
+	SUBR Malloc
+	; allocation
+
+	STORE (1) -1[LB]
+	; resultat dans adr
+
+	LOAD(1) -1[LB]
+	RETURN (0) 1
+nullnullnull
