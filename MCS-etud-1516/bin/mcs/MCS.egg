@@ -1068,15 +1068,14 @@ end}
 F -> mult #h F #gen;
 #h {
 do
-    
 end
 }
 #gen {
 do
-  F^type := F1^type;
-  F^code_est_adresse := true;
-  F^code :=  F1^code;
-  F^adresse := F1^adresse;
+    F^type := F1^type;
+	F^code_est_adresse := true;
+	F^code :=  F1^code;
+	F^adresse := F1^adresse;  
 end}
 
 
@@ -1085,18 +1084,26 @@ global
   c : DTYPE; 
   i : INFO;
   e : Emplacement;
+  p:POINTEUR;
+  t:DTYPE;
 #gen {
 do
     i := F^tds.chercherGlobalement(ident^txt);
     if i /= null then
         match i with INFOVAR then
             c := i.getType();
-            F^type := FX^type;
-            F^code_est_adresse := true;
-            write " FX^adresse =" +FX^adresse + "\n";
-            if FX^adresse != -1 then
+            match c with POINTEUR then
+                t:=c.getType();
+                match t with STRUCT then
+                    F^type := FX^type;
+                else
+                    p := c;
+			        F^type := p.getType();
+                end
+                F^code_est_adresse := true;
                 F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
             else
+                F^type := FX^type;
                 F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
             end
             F^adresse := i.getDep();
@@ -1135,26 +1142,28 @@ local
  s : STRUCT ;
  c : CHAMP;
  lc : LCHAMPS;
+ p: POINTEUR;
+ t : DTYPE;
 do
  write   FX^htype;
+ 
   match FX^htype
-  with STRUCT then
-  write "blabla";
-    s := FX^htype;
-    lc := s.getChamps();
-   
-    c := lc.chercher(ident^txt);
-   
-    if c = null then
-      error(Unaffected_ident, ident^txt) ;
-    else
-    write c.getDep();
-      FX1^hadresse := c.getDep() + lc.getTaille();
-      FX1^htype := c.getType();        
-      FX1^hcode_est_adresse := false;
-      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-      write FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-    end    
+  with POINTEUR then
+    p := FX^htype;
+    t := p.getType();
+    match t 
+    with STRUCT then
+	    s := t;
+	    lc := s.getChamps();
+	    c := lc.chercher(ident^txt);
+	    if c = null then
+	      error(Unaffected_ident, ident^txt) ;
+	    else
+	      FX1^hadresse := c.getDep() + lc.getTaille();
+	      FX1^htype := c.getType();        
+	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
+	    end  
+     end   
   else
     error(Wrong_Type, FX^htype);
   end
