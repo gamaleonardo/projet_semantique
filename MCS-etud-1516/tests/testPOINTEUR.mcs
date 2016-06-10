@@ -1,5 +1,17 @@
+int * malloc(int taille){
+  int adr;
+  // appel a l'allocation TAM
+  asm {
+    LOAD %taille    ; acces au parametre taille
+    SUBR Malloc     ; allocation
+    STORE %adr      ; resultat dans adr
+  }
+  return adr;
+}
+
 int main() {
-	int *m = 6;
+    int *m = (int *)malloc(1);
+    *m = 6;
 	struct {int x; int y;} *p;
 	*p.x = 5;
 	*p.y = *p.x;

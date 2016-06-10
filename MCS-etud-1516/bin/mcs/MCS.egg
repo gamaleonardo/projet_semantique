@@ -1053,14 +1053,6 @@ F -> paro #dep TYPE parf  F #gen;      --cast ??? nader
 do
     TYPE^hdep := new Emplacement(0, new Register("SB", 0));   --classe Emplacement dans mcsgc | Pas d'emplacements pour un type (Maxime)
 end}
---#gen{       --nader
---do
-  -- if (F1^type.getTaille()=TYPE^type.getTaille()) then
-    --   F^type:=TYPE^type; 
-      -- F^code:= F1^code;
-   --else error(cast_diff_taille, F1^type); 
---end
---end}
 #gen{
 do
     if F1^type.compareTo(TYPE^type) then
@@ -1073,7 +1065,12 @@ do
     end
 end}
 
-F -> mult F #gen;
+F -> mult #h F #gen;
+#h {
+do
+    
+end
+}
 #gen {
 do
   F^type := F1^type;
@@ -1096,8 +1093,12 @@ do
             c := i.getType();
             F^type := FX^type;
             F^code_est_adresse := true;
-            F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
-            --F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
+            write " FX^adresse =" +FX^adresse + "\n";
+            if FX^adresse != -1 then
+                F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
+            else
+                F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
+            end
             F^adresse := i.getDep();
         end
         match i with INFOFONC then
@@ -1147,7 +1148,8 @@ do
     if c = null then
       error(Unaffected_ident, ident^txt) ;
     else
-    write c.getType();
+    write c.getDep();
+      FX1^hadresse := c.getDep() + lc.getTaille();
       FX1^htype := c.getType();        
       FX1^hcode_est_adresse := false;
       FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
@@ -1290,7 +1292,25 @@ end}
 -------------------------------------------------
 --TYPE -> bool;
 ---- definit un contenu d'un namespace
---ENTITE -> namespace identc aco ENTITES acf ;
+--ENTITE -> namespace identc #tds  aco ENTITES acf ;
+--#tds{
+--local
+    --ns : INFO;
+    --sousnamespace : ArrayList<Namespace> ;
+    --nmtds : TDS;
+--do
+    --ns := ENTITE^tds.chercherGlobalement(identc^txt);
+    --if ns=null then
+        --nmtds := new TDS(ENTITE^tds);
+        --sousnamespace := new ArrayList<Namespace>();
+        --ns := new Namespace(sousnamespace,nmtds);
+        --ENTITE^tds.inserer(identc^txt,ns);
+        --ENTITES^tds:= nmtds;
+    --else 
+        --error(ns_existe, identc^txt);
+    --end
+--end
+--}
 ---- donne l acces au contenu du 'namespace'
 --ENTITE -> using identc IDC pv ;
 --IDC -> ;
