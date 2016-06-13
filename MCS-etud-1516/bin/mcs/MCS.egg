@@ -289,7 +289,6 @@ do
     FONCTION^dep:=BLOC^dep;    
     FONCTION^type := BLOC^type;
     FONCTION^code := FONCTION^tam.genFonction(FONCTION^declid, 0, BLOC^type.getTaille(),BLOC^code); --A completer : enregistrer le type de retour
-    write "\n tds de la fonction :" + FONCTION^tds + "\n";
 end}
  
  
@@ -707,8 +706,6 @@ do
  if AFFX^type.compareTo(new DTYPEImpl("void", 0)) then
      E^type := A^type;  
      E^code := A^code + AFFX^code;
-    -- write AFFX^code;
-    -- write "test1";
  elseif A^type.compareTo(AFFX^type) then
      E^type := A^type;
      E^code := AFFX^code  + E^tam.genWriteIndirectMem(A^type.getTaille()); ---- A^code
@@ -1056,27 +1053,30 @@ do
 end}
 #gen{
 do
-    if F1^type.compareTo(TYPE^type) then
+    --if F1^type.compareTo(TYPE^type) then  -- Pour l'instant on ne gère pas le cast
         F^type := TYPE^type;
         F^code_est_adresse := F1^code_est_adresse ;
         F^adresse := F1^adresse;
         F^code := F1^code;
-    else
-        error(Wrong_Type, F1^type);
-    end
+    --else
+    --    error(Wrong_Type, F1^type);
+    --end
 end}
 
-F -> mult #h F #gen;
-#h {
-do
-end
-}
+F -> mult F #gen;
 #gen {
+local
+    c : DTYPE;
 do
-    F^type := F1^type;
-	F^code_est_adresse := true;
-	F^code :=  F1^code;
-	F^adresse := F1^adresse;  
+    c := F1^type;
+    match c with POINTEUR then
+	    F^type := c.getType();
+		F^code_est_adresse := true;
+		F^code :=  F1^code;
+		F^adresse := F1^adresse;  
+    else 
+        error(pas_un_pointeur, F1^type);
+    end
 end}
 
 
@@ -1085,7 +1085,7 @@ global
   c : DTYPE; 
   i : INFO;
   e : Emplacement;
-  p:POINTEUR;
+ --p:POINTEUR;
   t:DTYPE;
 #gen {
 do
@@ -1094,19 +1094,12 @@ do
         match i with INFOVAR then
             c := i.getType();
             match c with POINTEUR then
-                t:=c.getType();
-                match t with STRUCT then
-                    F^type := FX^type;
-                else
-                    p := c;
-			        F^type := p.getType();
-                end
                 F^code_est_adresse := true;
                 F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
             else
-                F^type := FX^type;
                 F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
             end
+            F^type := FX^type;
             F^adresse := i.getDep();
         end
         match i with INFOFONC then
@@ -1121,10 +1114,19 @@ do
 end}
 #h {
 do
-   i := F^tds.chercherGlobalement(ident^txt);
-    c := i.getType();
+    i := F^tds.chercherGlobalement(ident^txt);
+    if i /= null then
+        match i with INFOVAR then
+            c := i.getType();
+            match c with POINTEUR then
+            t:=c.getType();
+              FX^htype := t;
+            else         
+                FX^htype:=c; 
+            end
+            end
   FX^hcode_est_adresse := false;
-  FX^htype:=c;      
+            end     
 end}
 
 FX ->#gen ;
@@ -1145,26 +1147,27 @@ local
  lc : LCHAMPS;
  p: POINTEUR;
  t : DTYPE;
-do
- write   FX^htype;
- 
+do 
+
+          write "\n type FX :" + FX^htype; 
   match FX^htype
-  with POINTEUR then
-    p := FX^htype;
-    t := p.getType();
-    match t 
+  --with POINTEUR then
+   -- p := FX^htype;
+    --t := p.getType();
+    --match t 
     with STRUCT then
-	    s := t;
+	    --s := t;
+        s := FX^htype;
 	    lc := s.getChamps();
 	    c := lc.chercher(ident^txt);
 	    if c = null then
 	      error(Unaffected_ident, ident^txt) ;
 	    else
 	      FX1^hadresse := c.getDep() + lc.getTaille();
-	      FX1^htype := c.getType();        
+	      FX1^htype := c.getType();       
 	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
 	    end  
-     end   
+     --end   
   else
     error(Wrong_Type, FX^htype);
   end
@@ -1300,8 +1303,8 @@ end}
 ----------------- CS extension --------------------
 -- Decommenter les regles suivantes pour l'extension CS
 -------------------------------------------------
---TYPE -> bool;
----- definit un contenu d'un namespace
+TYPE -> bool;
+-- definit un contenu d'un namespace
 --ENTITE -> namespace identc #tds  aco ENTITES acf ;
 --#tds{
 --local
