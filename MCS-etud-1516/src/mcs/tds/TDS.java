@@ -3,7 +3,6 @@ package mcs.tds;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 /**
  * une TDS hiérarchique.
  * 
@@ -63,7 +62,7 @@ public class TDS extends HashMap<String, INFO> {
 				return parente.chercherGlobalement(n);
 		return i;
 	}
-
+	
 	/**
 	 * Ajoute le nom n et son information i dans la TDS
 	 * 

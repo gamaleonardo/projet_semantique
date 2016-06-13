@@ -1323,8 +1323,7 @@ do
         nmtds := new TDS(ENTITE^tds);
         sousnamespace := new ArrayList<String>();
         ns := new Namespace(sousnamespace,nmtds,identc^txt);
-        --ns := new Namespace(nmtds);
-        ENTITE^tds.inserer(identc^txt,ns);
+        ns := new Namespace(nmtds);
         ENTITES^tds:= nmtds;
     else 
         error(ns_existe, identc^txt);
@@ -1366,7 +1365,7 @@ local
     i: INFO;
 do
     tds := IDC^hnms.getNstds();
-    i := tds.chercherGlobalement(identc^txt);
+    i := tds.chercherLocalement(identc^txt);
     match i with
     Namespace then 
         IDC1^hnms := i ;
