@@ -289,6 +289,7 @@ do
     FONCTION^dep:=BLOC^dep;    
     FONCTION^type := BLOC^type;
     FONCTION^code := FONCTION^tam.genFonction(FONCTION^declid, 0, BLOC^type.getTaille(),BLOC^code); --A completer : enregistrer le type de retour
+    write "\n tds de la fonction :" + FONCTION^tds + "\n";
 end}
  
  
@@ -361,8 +362,8 @@ do
     if (iv = null) then
       -- iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
       iv := new INFOVAR(TYPE^type, PARF^hdep);
-      PARF^tds.inserer(ident^txt,iv);
-       PARF^hparams.ajouterParametre(ident^txt,iv); 
+      --PARF^tds.inserer(ident^txt,iv);
+      PARF^hparams.ajouterParametre(ident^txt,iv); 
     else
         error(parametre_existe_deja, ident^txt);
     end
