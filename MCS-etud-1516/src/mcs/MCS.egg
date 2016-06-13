@@ -63,7 +63,7 @@ syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for F, FX ;
 
 --mc#
-syn nms : Namespace for ENTITE, IDC;
+syn nms : Namespace for  IDC;
 inh hnms : Namespace for IDC;
 
 --terminals
@@ -1322,7 +1322,7 @@ do
     if ns=null then
         nmtds := new TDS(ENTITE^tds);
         sousnamespace := new ArrayList<String>();
-        ns := new Namespace(sousnamespace,nmtds);
+        ns := new Namespace(sousnamespace,nmtds,identc^txt);
         --ns := new Namespace(nmtds);
         ENTITE^tds.inserer(identc^txt,ns);
         ENTITES^tds:= nmtds;
@@ -1347,9 +1347,10 @@ do
 end}
 #tds {
 local
-    t : TDS;
+   nom : String;
 do
-    t := IDC^nms.getNstds();
+    nom := IDC^nms.getNom();
+    ENTITE^tds.inserer(nom ,IDC^nms);
 end
 }
 IDC -> #h ;
