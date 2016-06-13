@@ -62,6 +62,10 @@ inh hcode_est_adresse : BOOLEAN for FX ;
 syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for F, FX ;
 
+--mc#
+syn nms : Namespace for ENTITE, IDC;
+inh hnms : Namespace for IDC;
+
 --terminals
 space separateur is  "[\r\n\t ]+";     
 space comm is  "\/\/[^\n]*\n";
@@ -82,21 +86,21 @@ sugar char is  "char";
 sugar struct is "struct";
 sugar typedef is "typedef";
 -- decommenter pour MCS
---sugar ref is "ref" ;
---sugar out is "out";
---sugar namespace is "namespace";
---sugar using is "using";
---sugar class is "class";
---sugar public is "public" ;
---sugar private is "private";
---sugar dpts is "\:";
---sugar bool is "bool";
---sugar true is "true";
---sugar false is "false";
---sugar this is "this";
---sugar new is "new" ;
---sugar null2 is "null";
---sugar base is "base" ;
+sugar ref is "ref" ;
+sugar out is "out";
+sugar namespace is "namespace";
+sugar using is "using";
+sugar class is "class";
+sugar public is "public" ;
+sugar private is "private";
+sugar dpts is "\:";
+sugar bool is "bool";
+sugar true is "true";
+sugar false is "false";
+sugar this is "this";
+sugar new is "new" ;
+sugar null2 is "null";
+sugar base is "base" ;
 -- 
 sugar retour is  "return";
 sugar arrow is "\-\>";
@@ -1300,57 +1304,107 @@ end}
 ----------------- CS extension --------------------
 -- Decommenter les regles suivantes pour l'extension CS
 -------------------------------------------------
---TYPE -> bool;
----- definit un contenu d'un namespace
---ENTITE -> namespace identc #tds  aco ENTITES acf ;
---#tds{
---local
-    --ns : INFO;
-    --sousnamespace : ArrayList<Namespace> ;
-    --nmtds : TDS;
---do
-    --ns := ENTITE^tds.chercherGlobalement(identc^txt);
-    --if ns=null then
-        --nmtds := new TDS(ENTITE^tds);
-        --sousnamespace := new ArrayList<Namespace>();
-        --ns := new Namespace(sousnamespace,nmtds);
-        --ENTITE^tds.inserer(identc^txt,ns);
-        --ENTITES^tds:= nmtds;
-    --else 
-        --error(ns_existe, identc^txt);
-    --end
---end
---}
----- donne l acces au contenu du 'namespace'
---ENTITE -> using identc IDC pv ;
---IDC -> ;
---IDC -> pt identc IDC ;
----- definition d'une classe (peut etre en dehors d'un namespace)
---ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
----- acces 
---ACCES -> public;
---ACCES -> private;
---ACCES -> ;
----- heritage
---HERITAGE -> ;
---HERITAGE -> dpts identc IDC ;
----- membres d'une classe
---DEFS -> ;
---DEFS ->  ACCES DEF DEFS ;
---DEF  ->  TYPE ident DECL ;
----- constructeur
---DEF  ->  identc paro PARFS parf BASE BLOC;
----- appel eventuel au constructeur de la classe parente.
---BASE -> ;
---BASE -> dpts base paro ES parf  ;
----- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
---PARF ->  MODE TYPE ident ;
---MODE -> ref ;
---MODE -> out ; 
---F -> true;
---F -> false;
---F -> this FX;
---F -> base FX;
---F -> null2;
---F -> new identc IDC paro ES parf ;
+TYPE -> bool #type;
+#type {
+do
+    TYPE^type := new DTYPEImpl("booleen", 1);
+end
+}
+-- definit un contenu d'un namespace
+ENTITE -> namespace identc #tds  aco ENTITES acf ;
+#tds{
+local
+    ns : INFO;
+    sousnamespace : ArrayList<Namespace> ;
+    nmtds : TDS;
+do
+    ns := ENTITE^tds.chercherGlobalement(identc^txt);
+    if ns=null then
+        nmtds := new TDS(ENTITE^tds);
+        sousnamespace := new ArrayList<String>();
+        ns := new Namespace(sousnamespace,nmtds);
+        --ns := new Namespace(nmtds);
+        ENTITE^tds.inserer(identc^txt,ns);
+        ENTITES^tds:= nmtds;
+    else 
+        error(ns_existe, identc^txt);
+    end
+end
+}
+-- donne l acces au contenu du 'namespace'
+ENTITE -> using identc #h IDC #tds pv ;
+#h {
+local
+    i : INFO;
+do
+    i := ENTITE^tds.chercherGlobalement(identc^txt);
+    match i with
+    Namespace then 
+        IDC^hnms := i ;
+    else
+        error(no_nms, identc^txt); 
+    end   
+end}
+#tds {
+local
+    t : TDS;
+do
+    t := IDC^nms.getNstds();
+end
+}
+IDC -> #h ;
+#h {
+do
+    IDC^nms := IDC^hnms;
+end
+}
+IDC -> pt identc #h IDC #gen ;
+#h {
+local
+    tds : TDS;
+    i: INFO;
+do
+    tds := IDC^hnms.getNstds();
+    i := tds.chercherGlobalement(identc^txt);
+    match i with
+    Namespace then 
+        IDC1^hnms := i ;
+    else
+        error(no_nms, identc^txt);  
+    end 
+end
+}
+#gen {
+do
+    IDC^nms := IDC1^nms;
+end
+}
+-- definition d'une classe (peut etre en dehors d'un namespace)
+ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
+-- acces 
+ACCES -> public;
+ACCES -> private;
+ACCES -> ;
+-- heritage
+HERITAGE -> ;
+HERITAGE -> dpts identc IDC ;
+-- membres d'une classe
+DEFS -> ;
+DEFS ->  ACCES DEF DEFS ;
+DEF  ->  TYPE ident DECL ;
+-- constructeur
+DEF  ->  identc paro PARFS parf BASE BLOC;
+-- appel eventuel au constructeur de la classe parente.
+BASE -> ;
+BASE -> dpts base paro ES parf  ;
+-- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
+PARF ->  MODE TYPE ident ;
+MODE -> ref ;
+MODE -> out ; 
+F -> true;
+F -> false;
+F -> this FX;
+F -> base FX;
+F -> null2;
+F -> new identc IDC paro ES parf ;
 end
