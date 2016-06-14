@@ -8,15 +8,36 @@ _foo:
 	LOADL 100
 	STOREI(1)
    ; declaration de a en 0/LB taille = 1
-	LOAD(1) -1[LB]
-	LOAD(1) -2[LB]
+null; fin de declaration de a
+	LOADL 1
+	SUBR Malloc
+	LOAD(1) 2[LB]
+	LOADL 666
 	SUBR IAdd 
-; fin de declaration de a
-null	RETURN (0) 1
+	STOREI(1)
+	LOADL 1
+	SUBR Malloc
+	LOAD(1) 2[LB]
+	STOREI(1)
+null	STOREI(1)
+	LOADL 12
+	STOREI(1)
+   ; declaration de b en 0/LB taille = 1
+	LOAD(1) 4[LB]
+	LOADL 9999
+	SUBR IAdd 
+; fin de declaration de b
+null	STOREI(1)
+	LOAD(1) 2[LB]
+	RETURN (0) 1
 _bar:
-   ; declaration de pt en 0/LB taille = 1
-; fin de declaration de pt
-nullnull   ; declaration de u en 0/LB taille = 1
+	LOADL 2
+	SUBR Malloc
+	LOADL 3
+	STOREI(1)
+	LOADL 3
+	STOREI(1)
+   ; declaration de u en 0/LB taille = 1
 	LOADL 301
 ; fin de declaration de u
    ; declaration de v en 0/LB taille = 1
@@ -24,16 +45,12 @@ nullnull   ; declaration de u en 0/LB taille = 1
 ; fin de declaration de v
    ; declaration de result en 0/LB taille = 1
 ; fin de declaration de result
-	LOADL 33
-	LOAD(1) -1[LB]
-	SUBR IMul 
-	LOAD(1) -2[LB]
-	SUBR ISub 
-	SUBR iGtr 
-; Appel a _foo
+null; Appel a _foo
 	CALL(SB) _foo
 	STOREI(1)
-	LOAD(1) 2[LB]
+	;Calcul deplacement struct 4
+	LOADL 4
+	SUBR Iadd
 	RETURN (0) 1
 ; inline code_asm
 
@@ -50,7 +67,7 @@ _malloc:
 ; inline code_asm
 
 
-	LOAD (1) -1[LB]
+	LOAD null
 	; acces au parametre taille
 
 	SUBR Malloc
@@ -59,6 +76,18 @@ _malloc:
 	STORE (1) -1[LB]
 	; resultat dans adr
 
-	LOAD(1) -1[LB]
+	;Calcul deplacement struct -1
+	LOADL -1
+	SUBR Iadd
 	RETURN (0) 1
-nullnullnull
+nullnull_main:
+   ; declaration de a en 0/LB taille = 1
+	LOADL 3
+; fin de declaration de a
+   ; declaration de c en 0/LB taille = 1
+	LOADL 'a'
+; fin de declaration de c
+   ; declaration de y en 0/LB taille = 1
+	LOADL 999
+; fin de declaration de y
+null	RETURN (0) 1

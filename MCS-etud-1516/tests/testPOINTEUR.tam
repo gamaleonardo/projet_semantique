@@ -1,0 +1,41 @@
+; Generated code for tests/testPOINTEUR.mcs.
+; Do not modify by hand
+; Appel a main
+	CALL(SB) main
+_malloc:
+   ; declaration de adr en 0/LB taille = 1
+; fin de declaration de adr
+; inline code_asm
+
+
+	LOAD null
+	; acces au parametre taille
+
+	SUBR Malloc
+	; allocation
+
+	STORE (1) -1[LB]
+	; resultat dans adr
+
+	;Calcul deplacement struct -1
+	LOADL -1
+	SUBR Iadd
+	RETURN (0) 1
+_main:
+	LOADL 2
+	SUBR Malloc
+	LOADL 3
+	STOREI(1)
+	LOADL 4
+	STOREI(1)
+   ; declaration de c en 0/LB taille = 1
+	LOAD(1) -1[LB]
+; fin de declaration de c
+	LOAD(1) -1[LB]
+	STOREI(1)
+	;Calcul deplacement struct 2
+	LOADL 2
+	SUBR Iadd
+	STOREI(1)
+	LOADL 0
+	RETURN (0) 1

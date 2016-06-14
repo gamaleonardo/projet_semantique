@@ -1,0 +1,67 @@
+;;; code TAM engendre pour exemples/td
+
+; Appel a xxx
+	CALL(SB) _xxx
+	HALT
+_xxx:
+   ; declaration de p en 3/LB taille = 1
+	LOADL 2
+	SUBR Malloc
+; fin de declaration de p
+; Valeur
+	LOADL 3
+; Adresse
+; acces zone pointee : 
+	LOAD(1) 3[LB]
+; acces champ : x
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
+	STOREI(1)
+; Valeur
+	LOADL 4
+; Adresse
+; acces zone pointee : 
+	LOAD(1) 3[LB]
+; acces champ : y
+	;Calcul deplacement struct 1
+	LOADL 1
+	SUBR Iadd
+	STOREI(1)
+   ; declaration de c en 4/LB taille = 1
+; acces zone pointee : 
+	LOAD(1) 3[LB]
+; acces champ : x
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
+	LOADI(1)
+; fin de declaration de c
+; Valeur
+; acces zone pointee : 
+	LOAD(1) 3[LB]
+; acces champ : y
+	;Calcul deplacement struct 1
+	LOADL 1
+	SUBR Iadd
+	LOADI(1)
+; Adresse
+; acces zone pointee : 
+	LOAD(1) 3[LB]
+; acces champ : x
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
+	STOREI(1)
+; Valeur
+	LOAD(1) 4[LB]
+; Adresse
+; acces zone pointee : 
+	LOAD(1) 3[LB]
+; acces champ : y
+	;Calcul deplacement struct 1
+	LOADL 1
+	SUBR Iadd
+	STOREI(1)
+	POP(0)2
+	RETURN (0) 0

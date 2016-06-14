@@ -13,13 +13,16 @@ int main() {
     //int *m = (int *)malloc(1);
     //*m = 6;
 	struct {int x; int y;} *p;
-	*p.x = 5;
-	*p.y = *p.x;
+	*p.x = 3 ;
+	*p.y = 4;
+	int c = *p.x;
+	*p.x = *p.y;
+	*p.y = c;
 	
-	int ** k = (int **)malloc(1) ;
-    *k = m;
+	//int ** k = (int **)malloc(1) ;
+    //*k = m;
     // allocation
     //*k = (int *)malloc(1) ;
-    ** k = 12;
+    //** k = 12;
 	return 0;
 }
