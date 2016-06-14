@@ -1086,7 +1086,7 @@ global
   i : INFO;
   e : Emplacement;
  --p:POINTEUR;
-  t:DTYPE;
+  --t:DTYPE;
 #gen {
 do
     i := F^tds.chercherGlobalement(ident^txt);
@@ -1100,7 +1100,7 @@ do
                 F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
             end
             F^type := FX^type;
-            F^adresse := i.getDep();
+            F^adresse := FX^adresse;
         end
         match i with INFOFONC then
             c := i.getType();
@@ -1118,12 +1118,12 @@ do
     if i /= null then
         match i with INFOVAR then
             c := i.getType();
-            match c with POINTEUR then
-            t:=c.getType();
-              FX^htype := t;
-            else         
+            --match c with POINTEUR then
+            --t:=c.getType();
+             -- FX^htype := t;
+            --else         
                 FX^htype:=c; 
-            end
+            --end
             end
   FX^hcode_est_adresse := false;
             end     
@@ -1148,16 +1148,14 @@ local
  p: POINTEUR;
  t : DTYPE;
 do 
-
-          write "\n type FX :" + FX^htype; 
   match FX^htype
-  --with POINTEUR then
-   -- p := FX^htype;
-    --t := p.getType();
-    --match t 
+  with POINTEUR then
+    p := FX^htype;
+    t := p.getType();
+    match t 
     with STRUCT then
-	    --s := t;
-        s := FX^htype;
+	    s := t;
+        --s := FX^htype;
 	    lc := s.getChamps();
 	    c := lc.chercher(ident^txt);
 	    if c = null then
@@ -1167,14 +1165,14 @@ do
 	      FX1^htype := c.getType();       
 	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
 	    end  
-     --end   
+     end   
   else
     error(Wrong_Type, FX^htype);
   end
 end}
 #gen {
 do
-    FX^type := FX1^type;
+    FX^type := new POINTEUR(FX1^type);
     FX^code_est_adresse := true;
     FX^code :=FX1^code;
     FX^adresse := FX1^adresse;
@@ -1188,19 +1186,27 @@ local
  s : STRUCT ;
  c : CHAMP;
  lc : LCHAMPS;
+ p: POINTEUR;
+ t:DTYPE;
 do
   match FX^htype
-  with STRUCT then
-    s := FX^htype;
-    lc := s.getChamps();
-    c := lc.chercher(ident^txt);
-    if c = null then
-      error(Unaffected_ident, ident^txt) ;
-    else
-      FX1^htype := c.getType();        
-      FX1^hcode_est_adresse := false;
-      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-    end    
+  with POINTEUR then
+    p := FX^htype;
+    t := p.getType();
+      match t 
+	  with STRUCT then
+        s:=t;
+	    --s := FX^htype;
+	    lc := s.getChamps();
+	    c := lc.chercher(ident^txt);
+	    if c = null then
+	      error(Unaffected_ident, ident^txt) ;
+	    else
+	      FX1^htype := c.getType();        
+	      FX1^hcode_est_adresse := false;
+	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
+	    end    
+      end
   else
     error(Wrong_Type, FX^htype);
   end
@@ -1303,7 +1309,7 @@ end}
 ----------------- CS extension --------------------
 -- Decommenter les regles suivantes pour l'extension CS
 -------------------------------------------------
-TYPE -> bool;
+--TYPE -> bool;
 -- definit un contenu d'un namespace
 --ENTITE -> namespace identc #tds  aco ENTITES acf ;
 --#tds{
