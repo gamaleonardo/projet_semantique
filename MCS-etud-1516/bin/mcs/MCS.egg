@@ -1322,7 +1322,7 @@ local
 do
     ns := ENTITE^tds.chercherGlobalement(identc^txt);
     if ns=null then
-        nmtds := new TDS(ENTITE^tds);
+        nmtds := new TDS();
         sousnamespace := new ArrayList<String>();
         ns := new Namespace(sousnamespace,nmtds,identc^txt);
         ns := new Namespace(nmtds);
