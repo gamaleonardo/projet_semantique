@@ -4,12 +4,12 @@ import java.util.ArrayList;
 
 import mcs.type.DTYPE;
 
-public class Namespace implements INFO {
+public class NAMESPACE implements INFO {
     
-    protected ArrayList<Namespace> sousnamespace;
+    protected ArrayList<NAMESPACE> sousnamespace;
    	protected TDS nstds ;
 	
-   	public Namespace(ArrayList<Namespace> sousnamespace, TDS nstds) {
+   	public NAMESPACE(ArrayList<NAMESPACE> sousnamespace, TDS nstds) {
 		super();
 		this.sousnamespace = sousnamespace;
 		this.nstds = nstds;
@@ -19,7 +19,7 @@ public class Namespace implements INFO {
 		return nstds;
 	}
    	
-    public ArrayList<Namespace> getSousnamespace() {
+    public ArrayList<NAMESPACE> getSousnamespace() {
 		return sousnamespace;
 	}
     

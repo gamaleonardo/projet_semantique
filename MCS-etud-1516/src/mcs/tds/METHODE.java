@@ -2,7 +2,7 @@ package mcs.tds;
 import mcs.type.*;
 import mcs.gc.*;
 
-public class Methode implements INFO{
+public class METHODE implements INFO{
 	protected DTYPEImpl typeRetour;
 	protected PARAMETRES params;
 	protected Emplacement empl;
@@ -25,7 +25,7 @@ public class Methode implements INFO{
 	}
 
 	
-	public Methode(DTYPEImpl t, Emplacement e, PARAMETRES p, String s) {
+	public METHODE(DTYPEImpl t, Emplacement e, PARAMETRES p, String s) {
 		typeRetour = t;
 		empl = e;
 		params = p;

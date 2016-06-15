@@ -7,12 +7,12 @@ import mcs.gc.Emplacement;
 import mcs.type.*;
 
 
-public class INFOCLASS implements INFO{
-    protected HashMap<String,Methode> methodes;
+public class INFOCLASSE implements INFO{
+    protected HashMap<String,METHODE> methodes;
  
     protected HashMap<String,DTYPEImpl> attributs;
     // classeMere;
-    protected INFOCLASS classeMere;
+    protected INFOCLASSE classeMere;
     protected Emplacement empl;
     protected String nom;
     
@@ -23,11 +23,11 @@ public class INFOCLASS implements INFO{
 	}
 	
 	
-    public HashMap<String,Methode> getMethodes(){
+    public HashMap<String,METHODE> getMethodes(){
     	return methodes;
     }
   
-    public INFOCLASS getClasseMere(){
+    public INFOCLASSE getClasseMere(){
     	return classeMere;
     }
     
@@ -39,7 +39,7 @@ public class INFOCLASS implements INFO{
     	return res;
     }
     
-	public INFOCLASS(HashMap<String,Methode> m ,HashMap<String,DTYPEImpl> a, Emplacement e, String Nom) {
+	public INFOCLASSE(HashMap<String,METHODE> m ,HashMap<String,DTYPEImpl> a, Emplacement e, String Nom) {
 		methodes = m;
 		attributs = a;
 		classeMere = null;
@@ -47,7 +47,7 @@ public class INFOCLASS implements INFO{
 		nom = Nom;
 	}
 	
-	public INFOCLASS(HashMap<String,Methode> m , HashMap<String,DTYPEImpl> a, INFOCLASS c, Emplacement e, String Nom) {
+	public INFOCLASSE(HashMap<String,METHODE> m , HashMap<String,DTYPEImpl> a, INFOCLASSE c, Emplacement e, String Nom) {
 		methodes = m;
 		attributs = a;
 		classeMere = c;
@@ -55,7 +55,7 @@ public class INFOCLASS implements INFO{
 		nom = Nom;
 	}
 	
-	public void setClasseMere (INFOCLASS c){
+	public void setClasseMere (INFOCLASSE c){
 		classeMere = c;
 	}
 	
@@ -70,8 +70,8 @@ public class INFOCLASS implements INFO{
 		return nom;
 	}
 	
-	public Methode getMethode(String nom){
-		Methode s = methodes.get(nom);
+	public METHODE getMethode(String nom){
+		METHODE s = methodes.get(nom);
 		if (s==null && classeMere!=null){
 			if(classeMere!=null){
 				return classeMere.getMethode(nom);
