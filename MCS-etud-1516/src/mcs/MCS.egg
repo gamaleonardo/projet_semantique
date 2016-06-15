@@ -62,10 +62,6 @@ inh hcode_est_adresse : BOOLEAN for FX ;
 syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for F, FX ;
 
---mc#
-syn nms : Namespace for  IDC;
-inh hnms : Namespace for IDC;
-
 --terminals
 space separateur is  "[\r\n\t ]+";     
 space comm is  "\/\/[^\n]*\n";
@@ -86,21 +82,21 @@ sugar char is  "char";
 sugar struct is "struct";
 sugar typedef is "typedef";
 -- decommenter pour MCS
-sugar ref is "ref" ;
-sugar out is "out";
-sugar namespace is "namespace";
-sugar using is "using";
-sugar class is "class";
-sugar public is "public" ;
-sugar private is "private";
-sugar dpts is "\:";
-sugar bool is "bool";
-sugar true is "true";
-sugar false is "false";
-sugar this is "this";
-sugar new is "new" ;
-sugar null2 is "null";
-sugar base is "base" ;
+--sugar ref is "ref" ;
+--sugar out is "out";
+--sugar namespace is "namespace";
+--sugar using is "using";
+--sugar class is "class";
+--sugar public is "public" ;
+--sugar private is "private";
+--sugar dpts is "\:";
+--sugar bool is "bool";
+--sugar true is "true";
+--sugar false is "false";
+--sugar this is "this";
+--sugar new is "new" ;
+--sugar null2 is "null";
+--sugar base is "base" ;
 -- 
 sugar retour is  "return";
 sugar arrow is "\-\>";
@@ -293,7 +289,6 @@ do
     FONCTION^dep:=BLOC^dep;    
     FONCTION^type := BLOC^type;
     FONCTION^code := FONCTION^tam.genFonction(FONCTION^declid, 0, BLOC^type.getTaille(),BLOC^code); --A completer : enregistrer le type de retour
-    write "\n tds de la fonction :" + FONCTION^tds + "\n";
 end}
  
  
@@ -711,8 +706,6 @@ do
  if AFFX^type.compareTo(new DTYPEImpl("void", 0)) then
      E^type := A^type;  
      E^code := A^code + AFFX^code;
-    -- write AFFX^code;
-    -- write "test1";
  elseif A^type.compareTo(AFFX^type) then
      E^type := A^type;
      E^code := AFFX^code  + E^tam.genWriteIndirectMem(A^type.getTaille()); ---- A^code
@@ -1060,27 +1053,30 @@ do
 end}
 #gen{
 do
-    if F1^type.compareTo(TYPE^type) then
+    --if F1^type.compareTo(TYPE^type) then  -- Pour l'instant on ne gère pas le cast
         F^type := TYPE^type;
         F^code_est_adresse := F1^code_est_adresse ;
         F^adresse := F1^adresse;
         F^code := F1^code;
-    else
-        error(Wrong_Type, F1^type);
-    end
+    --else
+    --    error(Wrong_Type, F1^type);
+    --end
 end}
 
-F -> mult #h F #gen;
-#h {
-do
-end
-}
+F -> mult F #gen;
 #gen {
+local
+    c : DTYPE;
 do
-    F^type := F1^type;
-	F^code_est_adresse := true;
-	F^code :=  F1^code;
-	F^adresse := F1^adresse;  
+    c := F1^type;
+    match c with POINTEUR then
+	    F^type := c.getType();
+		F^code_est_adresse := true;
+		F^code :=  F1^code;
+		F^adresse := F1^adresse;  
+    else 
+        error(pas_un_pointeur, F1^type);
+    end
 end}
 
 
@@ -1089,8 +1085,8 @@ global
   c : DTYPE; 
   i : INFO;
   e : Emplacement;
-  p:POINTEUR;
-  t:DTYPE;
+ --p:POINTEUR;
+  --t:DTYPE;
 #gen {
 do
     i := F^tds.chercherGlobalement(ident^txt);
@@ -1098,20 +1094,13 @@ do
         match i with INFOVAR then
             c := i.getType();
             match c with POINTEUR then
-                t:=c.getType();
-                match t with STRUCT then
-                    F^type := FX^type;
-                else
-                    p := c;
-			        F^type := p.getType();
-                end
                 F^code_est_adresse := true;
                 F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
             else
-                F^type := FX^type;
                 F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
             end
-            F^adresse := i.getDep();
+            F^type := FX^type;
+            F^adresse := FX^adresse;
         end
         match i with INFOFONC then
             c := i.getType();
@@ -1125,10 +1114,19 @@ do
 end}
 #h {
 do
-   i := F^tds.chercherGlobalement(ident^txt);
-    c := i.getType();
+    i := F^tds.chercherGlobalement(ident^txt);
+    if i /= null then
+        match i with INFOVAR then
+            c := i.getType();
+            --match c with POINTEUR then
+            --t:=c.getType();
+             -- FX^htype := t;
+            --else         
+                FX^htype:=c; 
+            --end
+            end
   FX^hcode_est_adresse := false;
-  FX^htype:=c;      
+            end     
 end}
 
 FX ->#gen ;
@@ -1149,9 +1147,7 @@ local
  lc : LCHAMPS;
  p: POINTEUR;
  t : DTYPE;
-do
- write   FX^htype;
- 
+do 
   match FX^htype
   with POINTEUR then
     p := FX^htype;
@@ -1159,13 +1155,14 @@ do
     match t 
     with STRUCT then
 	    s := t;
+        --s := FX^htype;
 	    lc := s.getChamps();
 	    c := lc.chercher(ident^txt);
 	    if c = null then
 	      error(Unaffected_ident, ident^txt) ;
 	    else
 	      FX1^hadresse := c.getDep() + lc.getTaille();
-	      FX1^htype := c.getType();        
+	      FX1^htype := c.getType();       
 	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
 	    end  
      end   
@@ -1175,7 +1172,7 @@ do
 end}
 #gen {
 do
-    FX^type := FX1^type;
+    FX^type := new POINTEUR(FX1^type);
     FX^code_est_adresse := true;
     FX^code :=FX1^code;
     FX^adresse := FX1^adresse;
@@ -1189,19 +1186,27 @@ local
  s : STRUCT ;
  c : CHAMP;
  lc : LCHAMPS;
+ p: POINTEUR;
+ t:DTYPE;
 do
   match FX^htype
-  with STRUCT then
-    s := FX^htype;
-    lc := s.getChamps();
-    c := lc.chercher(ident^txt);
-    if c = null then
-      error(Unaffected_ident, ident^txt) ;
-    else
-      FX1^htype := c.getType();        
-      FX1^hcode_est_adresse := false;
-      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-    end    
+  with POINTEUR then
+    p := FX^htype;
+    t := p.getType();
+      match t 
+	  with STRUCT then
+        s:=t;
+	    --s := FX^htype;
+	    lc := s.getChamps();
+	    c := lc.chercher(ident^txt);
+	    if c = null then
+	      error(Unaffected_ident, ident^txt) ;
+	    else
+	      FX1^htype := c.getType();        
+	      FX1^hcode_est_adresse := false;
+	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
+	    end    
+      end
   else
     error(Wrong_Type, FX^htype);
   end
@@ -1304,107 +1309,72 @@ end}
 ----------------- CS extension --------------------
 -- Decommenter les regles suivantes pour l'extension CS
 -------------------------------------------------
-TYPE -> bool #type;
-#type {
-do
-    TYPE^type := new DTYPEImpl("booleen", 1);
-end
-}
+--TYPE -> bool;
 -- definit un contenu d'un namespace
-ENTITE -> namespace identc #tds  aco ENTITES acf ;
-#tds{
-local
-    ns : INFO;
-    sousnamespace : ArrayList<Namespace> ;
-    nmtds : TDS;
-do
-    ns := ENTITE^tds.chercherGlobalement(identc^txt);
-    if ns=null then
-        nmtds := new TDS(ENTITE^tds);
-        sousnamespace := new ArrayList<String>();
-        ns := new Namespace(sousnamespace,nmtds,identc^txt);
-        ns := new Namespace(nmtds);
-        ENTITES^tds:= nmtds;
-    else 
-        error(ns_existe, identc^txt);
-    end
-end
-}
--- donne l acces au contenu du 'namespace'
-ENTITE -> using identc #h IDC #tds pv ;
-#h {
-local
-    i : INFO;
-do
-    i := ENTITE^tds.chercherGlobalement(identc^txt);
-    match i with
-    Namespace then 
-        IDC^hnms := i ;
-    else
-        error(no_nms, identc^txt); 
-    end   
-end}
-#tds {
-local
-   nom : String;
-do
-    nom := IDC^nms.getNom();
-    ENTITE^tds.inserer(nom ,IDC^nms);
-end
-}
-IDC -> #h ;
-#h {
-do
-    IDC^nms := IDC^hnms;
-end
-}
-IDC -> pt identc #h IDC #gen ;
-#h {
-local
-    tds : TDS;
-    i: INFO;
-do
-    tds := IDC^hnms.getNstds();
-    i := tds.chercherLocalement(identc^txt);
-    match i with
-    Namespace then 
-        IDC1^hnms := i ;
-    else
-        error(no_nms, identc^txt);  
-    end 
-end
-}
-#gen {
-do
-    IDC^nms := IDC1^nms;
-end
-}
--- definition d'une classe (peut etre en dehors d'un namespace)
-ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
--- acces 
-ACCES -> public;
-ACCES -> private;
-ACCES -> ;
--- heritage
-HERITAGE -> ;
-HERITAGE -> dpts identc IDC ;
--- membres d'une classe
-DEFS -> ;
-DEFS ->  ACCES DEF DEFS ;
-DEF  ->  TYPE ident DECL ;
--- constructeur
-DEF  ->  identc paro PARFS parf BASE BLOC;
--- appel eventuel au constructeur de la classe parente.
-BASE -> ;
-BASE -> dpts base paro ES parf  ;
--- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
-PARF ->  MODE TYPE ident ;
-MODE -> ref ;
-MODE -> out ; 
-F -> true;
-F -> false;
-F -> this FX;
-F -> base FX;
-F -> null2;
-F -> new identc IDC paro ES parf ;
+--ENTITE -> namespace identc #tds  aco ENTITES acf ;
+--#tds{
+--local
+    --ns : INFO;
+    --sousnamespace : ArrayList<NAMESPACE> ;
+    --nmtds : TDS;
+--do
+    --ns := ENTITE^tds.chercherGlobalement(identc^txt);
+    --if ns=null then
+        --nmtds := new TDS(ENTITE^tds);
+        --sousnamespace := new ArrayList<NAMESPACE>();
+        --ns := new Namespace(sousnamespace,nmtds);
+        --ENTITE^tds.inserer(identc^txt,ns);
+        --ENTITES^tds:= nmtds;
+    --else 
+        --error(ns_existe, identc^txt);
+    --end
+--end
+--}
+---- donne l acces au contenu du 'namespace'
+--ENTITE -> using #tds identc IDC pv ;
+--#tds{
+--local
+    --ns : INFO;
+    --sousnamespace : ArrayList<NAMESPACE> ;
+    --nmtds : TDS;
+--do
+    --ns := ENTITE^tds.chercherGlobalement(identc^txt);
+    --if ns = null then
+        --error(ns_nexiste_pas, identc^txt);
+    --else
+        --ENTITE^tds.inserer(identc^txt,ns);
+        --ENTITES^tds:= nmtds;
+    --end
+--end
+--}
+--IDC -> ;
+--IDC -> pt identc IDC ;
+---- definition d'une classe (peut etre en dehors d'un namespace)
+--ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
+---- acces 
+--ACCES -> public;
+--ACCES -> private;
+--ACCES -> ;
+---- heritage
+--HERITAGE -> ;
+--HERITAGE -> dpts identc IDC ;
+---- membres d'une classe
+--DEFS -> ;
+--DEFS ->  ACCES DEF DEFS ;
+--DEF  ->  TYPE ident DECL ;
+---- constructeur
+--DEF  ->  identc paro PARFS parf BASE BLOC;
+---- appel eventuel au constructeur de la classe parente.
+--BASE -> ;
+--BASE -> dpts base paro ES parf  ;
+---- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
+--PARF ->  MODE TYPE ident ;
+--MODE -> ref ;
+--MODE -> out ; 
+--F -> true;
+--F -> false;
+--F -> this FX;
+--F -> base FX;
+--F -> null2;
+--F -> new identc IDC paro ES parf ;
 end
