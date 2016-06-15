@@ -1315,13 +1315,13 @@ end}
 --#tds{
 --local
     --ns : INFO;
-    --sousnamespace : ArrayList<Namespace> ;
+    --sousnamespace : ArrayList<NAMESPACE> ;
     --nmtds : TDS;
 --do
     --ns := ENTITE^tds.chercherGlobalement(identc^txt);
     --if ns=null then
         --nmtds := new TDS(ENTITE^tds);
-        --sousnamespace := new ArrayList<Namespace>();
+        --sousnamespace := new ArrayList<NAMESPACE>();
         --ns := new Namespace(sousnamespace,nmtds);
         --ENTITE^tds.inserer(identc^txt,ns);
         --ENTITES^tds:= nmtds;
