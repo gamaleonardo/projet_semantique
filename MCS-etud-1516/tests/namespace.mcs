@@ -1,5 +1,10 @@
 namespace A {
 	int x;
+	
+	int test() {
+	return 0;
+	}
+	
 	namespace B {
 		int y;
 	}
@@ -8,10 +13,10 @@ namespace A {
 int foo() {
 	x = 10;
 	int c = x +1;
+	test();
 	return 0;
 }
 
-using A;
 int main() {
 	x = 10;
 	int c = x +1 ;

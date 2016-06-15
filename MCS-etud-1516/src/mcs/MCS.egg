@@ -1374,6 +1374,7 @@ end
 }
 #gen {
 do
+    write "test" + IDC^nms.getActive() + "\n";
     ENTITE^dep := new Emplacement(0, null);
     ENTITE^code := "";
 end
