@@ -20,7 +20,7 @@ public class TDS extends HashMap<String, INFO> {
 	 */
 	private TDS parente;
 
-	private ArrayList<Namespace> listNs;
+	private ArrayList<NAMESPACE> listNs;
 
 	/**
 	 * Constructeur pour une TDS sans parente
@@ -37,7 +37,7 @@ public class TDS extends HashMap<String, INFO> {
 	public TDS(TDS p) {
 		super();
 		parente = p;
-		listNs = new ArrayList<Namespace>();
+		listNs = new ArrayList<NAMESPACE>();
 	}
 
 	public TDS getParente() {
@@ -54,9 +54,9 @@ public class TDS extends HashMap<String, INFO> {
 		INFO i = get(n);
 		if (i == null) {
 			if (this.listNs != null) {
-				Iterator<Namespace> it= this.listNs.iterator();
+				Iterator<NAMESPACE> it= this.listNs.iterator();
 				while (it.hasNext() && i == null) {
-					Namespace ns = it.next();
+					NAMESPACE ns = it.next();
 					if (ns.getActive()) {
 						i = ns.getNstds().chercherLocalement(n);
 					}
@@ -89,16 +89,16 @@ public class TDS extends HashMap<String, INFO> {
 	public void inserer(String n, INFO i) {
 		put(n, i);
 	}
-
-	public ArrayList<Namespace> getListNs() {
+	
+	public ArrayList<NAMESPACE> getListNs() {
 		return listNs;
 	}
-	public void insererNs(Namespace ns) {
+	public void insererNs(NAMESPACE ns) {
 		this.listNs.add(ns);
 	}
-	public Namespace chercherNs(String s){
-		Namespace n = null;
-		Iterator<Namespace> it= this.listNs.iterator();
+	public NAMESPACE chercherNs(String s){
+		NAMESPACE n = null;
+		Iterator<NAMESPACE> it= this.listNs.iterator();
 		while (it.hasNext() && n == null) {
 			if (it.next().getNom().equals(s)) {
 				n = it.next();

@@ -1318,7 +1318,7 @@ end
 }
 
 -- definit un contenu d'un namespace
-ENTITE -> namespace identc #tds  aco ENTITES acf #gen;
+ENTITE -> namespace identc #tds aco ENTITES acf #gen;
 #tds{
 local
     i : INFO;
