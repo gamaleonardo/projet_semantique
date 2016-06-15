@@ -1306,75 +1306,107 @@ do
   INST^type := new DTYPEImpl("void", 0); -- si il ya du code assembleur le type de retour est void
 end}
 
------------------ CS extension --------------------
--- Decommenter les regles suivantes pour l'extension CS
--------------------------------------------------
---TYPE -> bool;
+TYPE -> bool #type;
+#type {
+do
+    TYPE^type := new DTYPEImpl("booleen", 1);
+end
+}
 -- definit un contenu d'un namespace
---ENTITE -> namespace identc #tds  aco ENTITES acf ;
---#tds{
---local
-    --ns : INFO;
-    --sousnamespace : ArrayList<NAMESPACE> ;
-    --nmtds : TDS;
---do
-    --ns := ENTITE^tds.chercherGlobalement(identc^txt);
-    --if ns=null then
-        --nmtds := new TDS(ENTITE^tds);
-        --sousnamespace := new ArrayList<NAMESPACE>();
-        --ns := new Namespace(sousnamespace,nmtds);
-        --ENTITE^tds.inserer(identc^txt,ns);
-        --ENTITES^tds:= nmtds;
-    --else 
-        --error(ns_existe, identc^txt);
-    --end
---end
---}
----- donne l acces au contenu du 'namespace'
---ENTITE -> using #tds identc IDC pv ;
---#tds{
---local
-    --ns : INFO;
-    --sousnamespace : ArrayList<NAMESPACE> ;
-    --nmtds : TDS;
---do
-    --ns := ENTITE^tds.chercherGlobalement(identc^txt);
-    --if ns = null then
-        --error(ns_nexiste_pas, identc^txt);
-    --else
-        --ENTITE^tds.inserer(identc^txt,ns);
-        --ENTITES^tds:= nmtds;
-    --end
---end
---}
---IDC -> ;
---IDC -> pt identc IDC ;
----- definition d'une classe (peut etre en dehors d'un namespace)
---ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
----- acces 
---ACCES -> public;
---ACCES -> private;
---ACCES -> ;
----- heritage
---HERITAGE -> ;
---HERITAGE -> dpts identc IDC ;
----- membres d'une classe
---DEFS -> ;
---DEFS ->  ACCES DEF DEFS ;
---DEF  ->  TYPE ident DECL ;
----- constructeur
---DEF  ->  identc paro PARFS parf BASE BLOC;
----- appel eventuel au constructeur de la classe parente.
---BASE -> ;
---BASE -> dpts base paro ES parf  ;
----- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
---PARF ->  MODE TYPE ident ;
---MODE -> ref ;
---MODE -> out ; 
---F -> true;
---F -> false;
---F -> this FX;
---F -> base FX;
---F -> null2;
---F -> new identc IDC paro ES parf ;
+ENTITE -> namespace identc #tds  aco ENTITES acf ;
+#tds{
+local
+    ns : INFO;
+    sousnamespace : ArrayList<Namespace> ;
+    nmtds : TDS;
+do
+    ns := ENTITE^tds.chercherGlobalement(identc^txt);
+    if ns=null then
+        nmtds := new TDS(ENTITE^tds);
+        sousnamespace := new ArrayList<String>();
+        ns := new Namespace(sousnamespace,nmtds,identc^txt);
+        ns := new Namespace(nmtds);
+        ENTITES^tds:= nmtds;
+    else 
+        error(ns_existe, identc^txt);
+    end
+end
+}
+-- donne l acces au contenu du 'namespace'
+ENTITE -> using identc #h IDC #tds pv ;
+#h {
+local
+    i : INFO;
+do
+    i := ENTITE^tds.chercherGlobalement(identc^txt);
+    match i with
+    Namespace then 
+        IDC^hnms := i ;
+    else
+        error(no_nms, identc^txt); 
+    end   
+end}
+#tds {
+local
+   nom : String;
+do
+    nom := IDC^nms.getNom();
+    ENTITE^tds.inserer(nom ,IDC^nms);
+end
+}
+IDC -> #h ;
+#h {
+do
+    IDC^nms := IDC^hnms;
+end
+}
+IDC -> pt identc #h IDC #gen ;
+#h {
+local
+    tds : TDS;
+    i: INFO;
+do
+    tds := IDC^hnms.getNstds();
+    i := tds.chercherLocalement(identc^txt);
+    match i with
+    Namespace then 
+        IDC1^hnms := i ;
+    else
+        error(no_nms, identc^txt);  
+    end 
+end
+}
+#gen {
+do
+    IDC^nms := IDC1^nms;
+end
+}
+-- definition d'une classe (peut etre en dehors d'un namespace)
+ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
+-- acces 
+ACCES -> public;
+ACCES -> private;
+ACCES -> ;
+-- heritage
+HERITAGE -> ;
+HERITAGE -> dpts identc IDC ;
+-- membres d'une classe
+DEFS -> ;
+DEFS ->  ACCES DEF DEFS ;
+DEF  ->  TYPE ident DECL ;
+-- constructeur
+DEF  ->  identc paro PARFS parf BASE BLOC;
+-- appel eventuel au constructeur de la classe parente.
+BASE -> ;
+BASE -> dpts base paro ES parf  ;
+-- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
+PARF ->  MODE TYPE ident ;
+MODE -> ref ;
+MODE -> out ; 
+F -> true;
+F -> false;
+F -> this FX;
+F -> base FX;
+F -> null2;
+F -> new identc IDC paro ES parf ;
 end
