@@ -1,0 +1,19 @@
+namespace A {
+	int x;
+	namespace B {
+		int y;
+	}
+}
+
+int foo() {
+	x = 10;
+	int c = x +1;
+	return 0;
+}
+
+using A;
+int main() {
+	x = 10;
+	int c = x +1 ;
+	return 0;
+}
