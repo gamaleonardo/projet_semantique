@@ -1326,7 +1326,7 @@ local
     --sousnamespace : ArrayList<Namespace> ;
     nmtds : TDS;
 do
-    i := ENTITE^tds.chercherGlobalement(identc^txt);
+    i := ENTITE^tds.chercherNs(identc^txt);
     if i=null then
         nmtds := new TDS();
         --sousnamespace := new ArrayList<String>();
@@ -1353,7 +1353,7 @@ local
     i : INFO;
     ns : Namespace;
 do
-    i := ENTITE^tds.chercherGlobalement(identc^txt);
+    i := ENTITE^tds.chercherNs(identc^txt);
     match i with
     Namespace then 
         ns := i;
