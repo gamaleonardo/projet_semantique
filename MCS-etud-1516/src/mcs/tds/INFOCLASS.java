@@ -11,12 +11,13 @@ public class INFOCLASS implements INFO{
     protected HashMap<String,Methode> methodes;
  
     protected HashMap<String,DTYPEImpl> attributs;
+    protected ArrayList<String> attribut;
     // classeMere;
     protected INFOCLASS classeMere;
     protected Emplacement empl;
     protected String nom;
-    
-
+    protected TDS tds;
+    protected String access;
 	@Override
 	public DTYPE getType() {
 		return null;
@@ -38,6 +39,18 @@ public class INFOCLASS implements INFO{
     	}
     	return res;
     }
+    
+    public INFOCLASS(TDS td,ArrayList<String> _attribut, Emplacement e, String Nom, INFOCLASS mere, String s ) {
+		tds = td;
+		attribut = _attribut;
+		classeMere = mere;
+		empl = e;
+		nom = Nom;
+		access =s;
+	}
+	
+    
+    
     
 	public INFOCLASS(HashMap<String,Methode> m ,HashMap<String,DTYPEImpl> a, Emplacement e, String Nom) {
 		methodes = m;

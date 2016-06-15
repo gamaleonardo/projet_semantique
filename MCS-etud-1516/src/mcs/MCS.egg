@@ -32,14 +32,14 @@ inh tds_asm : TDS for ASM;
 syn code : STRING for 
          ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          ES, ESX, DECL, -- ajoute attribut code a DECL Leonardo
-         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F ;
+         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F,DEFS;
 inh hcode : STRING for PTRS, F, FX;
 
 
 inh tds : TDS for 
          ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
-         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS
+         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS,DEFS,DEF
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
@@ -49,7 +49,7 @@ syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
 inh hparams: PARAMETRES for PARFS, PARF, PARFSX, E, ES, ESX, FX, F;
 
 syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL;
-inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE;     
+inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE,DEF;     
 
 inh champs : LCHAMPS for CHAMPS, CHAMP;
 inh declid : STRING for DECL,FONCTION;
@@ -61,6 +61,10 @@ syn code_est_adresse : BOOLEAN for  F, FX ;
 inh hcode_est_adresse : BOOLEAN for FX ;
 syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for F, FX ;
+----------------
+
+syn name : STRING for HERITAGE;
+syn acc : STRING for ACCES;
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -82,21 +86,21 @@ sugar char is  "char";
 sugar struct is "struct";
 sugar typedef is "typedef";
 -- decommenter pour MCS
---sugar ref is "ref" ;
---sugar out is "out";
---sugar namespace is "namespace";
---sugar using is "using";
---sugar class is "class";
---sugar public is "public" ;
---sugar private is "private";
---sugar dpts is "\:";
---sugar bool is "bool";
---sugar true is "true";
---sugar false is "false";
---sugar this is "this";
---sugar new is "new" ;
---sugar null2 is "null";
---sugar base is "base" ;
+sugar ref is "ref" ;
+sugar out is "out";
+sugar namespace is "namespace";
+sugar using is "using";
+sugar class is "class";
+sugar public is "public" ;
+sugar private is "private";
+sugar dpts is "\:";
+sugar bool is "bool";
+sugar true is "true";
+sugar false is "false";
+sugar this is "this";
+sugar new is "new" ;
+sugar null2 is "null";
+sugar base is "base" ;
 -- 
 sugar retour is  "return";
 sugar arrow is "\-\>";
@@ -133,7 +137,7 @@ global
     tds : TDS;
 #init {
 local
-do
+do 
     ENTITES^tam := new MTAM();
     ENTITES^hdep:=new Emplacement(0, new Register("SB",1));  
     machine := PROGRAMME^source.getMachine();
@@ -1332,7 +1336,7 @@ do
     end
 end
 }
--- donne l acces au contenu du 'namespace'
+-- donne l acces au contenu du 'namespace'error(no_nms, identc^txt);  
 ENTITE -> using identc #h IDC #tds pv ;
 #h {
 local
@@ -1382,20 +1386,105 @@ do
 end
 }
 -- definition d'une classe (peut etre en dehors d'un namespace)
-ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
+ENTITE -> ACCES class identc HERITAGE #1 aco DEFS acf;
+#1{
+local
+i:INFO;
+tds:TDS;
+attribut : ArrayList<String>; 
+do
+i:= ENTITE^tds.chercherGlobalement(identc^txt);
+if (i/=null) then
+error(no_nms, identc^txt);
+else
+tds := new TDS(ENTITE^tds);
+attribut := new ArrayList<String>();
+i:= new INFOCLASS(tds,attribut,null,identc^txt,HERITAGE^name,ACCES^acc);
+DEFS^tds:=tds;
+end
+end}
+
+
 -- acces 
-ACCES -> public;
-ACCES -> private;
-ACCES -> ;
+ACCES -> public #1;
+#1{
+do
+ACCES^acc := "public";
+end}
+
+
+ACCES -> private #2;
+#2{
+do
+ACCES^acc := "private";
+end}
+ACCES -> #3 ;
+#3{
+do
+ACCES^acc := "";
+end}
 -- heritage
-HERITAGE -> ;
-HERITAGE -> dpts identc IDC ;
+HERITAGE -> #name ;
+#name{
+do
+HERITAGE^name:=null;
+end}
+
+HERITAGE -> dpts identc IDC #name1 ;
+#name1{
+do
+HERITAGE^name:=identc^txt;
+end}
+
+
 -- membres d'une classe
-DEFS -> ;
+DEFS -> #gen;
+#gen{
+do
+DEFS^code:="";
+end}
 DEFS ->  ACCES DEF DEFS ;
-DEF  ->  TYPE ident DECL ;
+DEF  ->  TYPE ident #tds DECL ;
+#tds{
+local 
+    i: INFO;
+do
+    DECL^declid:=ident^txt;
+    DECL^declt:=TYPE^type;
+    DECL^tds:=DEF^tds;
+    DECL^hdep:=DEF^hdep;
+    
+    i := DEF^tds.chercherLocalement(ident^txt);
+    if i /= null then
+       match i
+           with INFOFONC then
+               error(Fonction_existe_deja, ident^txt); -- il s'agit d'une fonction donc traitement de la surcharge (nombre de paramétres différents avec le meme nom de fonction)
+           else 
+               error(ident_existe_deja, ident^txt);
+       end                                    
+    end
+end}
+
+
 -- constructeur
-DEF  ->  identc paro PARFS parf BASE BLOC;
+DEF  ->  identc #1 paro PARFS parf BASE BLOC;
+#1{
+local
+i:INFO;
+do
+ i := DEF^tds.chercherGlobalement(identc^txt);
+    match i with INFOCLASS then
+           -- BASE^mere :=i;
+      
+    else
+     error(Fonction_existe_deja, ident^txt);
+    end
+end}
+
+
+
+
+
 -- appel eventuel au constructeur de la classe parente.
 BASE -> ;
 BASE -> dpts base paro ES parf  ;
