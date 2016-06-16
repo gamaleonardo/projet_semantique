@@ -12,7 +12,17 @@ public class INFOCLASS implements INFO{
  
     protected HashMap<String,DTYPEImpl> attributs;
     protected ArrayList<String> attribut;
-    // classeMere;
+    protected ArrayList<String> tv;
+    public ArrayList<String> getTv() {
+		return tv;
+	}
+
+
+	public void setTv(ArrayList<String> tv) {
+		this.tv = tv;
+	}
+
+	// classeMere;
     protected INFOCLASS classeMere;
     protected Emplacement empl;
     protected String nom;
@@ -40,25 +50,16 @@ public class INFOCLASS implements INFO{
     	return res;
     }
     
-    public INFOCLASS(TDS td,ArrayList<String> _attribut, Emplacement e, String Nom, INFOCLASS mere, String s ) {
+    public INFOCLASS(TDS td,ArrayList<String> _attribut,ArrayList<String> _tv, Emplacement e, String Nom, INFOCLASS mere, String s ) {
 		tds = td;
 		attribut = _attribut;
 		classeMere = mere;
 		empl = e;
 		nom = Nom;
 		access =s;
+		tv=_tv;
 	}
 	
-    
-    
-    
-	public INFOCLASS(HashMap<String,Methode> m ,HashMap<String,DTYPEImpl> a, Emplacement e, String Nom) {
-		methodes = m;
-		attributs = a;
-		classeMere = null;
-		empl = e;
-		nom = Nom;
-	}
 	
 	public INFOCLASS(HashMap<String,Methode> m , HashMap<String,DTYPEImpl> a, INFOCLASS c, Emplacement e, String Nom) {
 		methodes = m;
@@ -74,7 +75,7 @@ public class INFOCLASS implements INFO{
 	
 	@Override
 	public String toString() {
-		return "INFOCLASS [attributs=" + attributs + "]";
+		return "INFOCLASS [attributs=" + attribut + "  table branchement " + tv;
 	}
 	
 

@@ -13,7 +13,7 @@ inh source : MCSSourceFile for PROGRAMME;
 inh machine : IMachine for 
          ENTITES, ENTITE, DECL, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX, 
-         E, AFFX, A, AX, R, RX, T, TX, F,FX
+         E, AFFX, A, AX, R, RX, T, TX, F,FX,DEF,DEFS,BASE
 --         -- decommenter la ligne suivante pour MCS
 --       , BASE, DEFS, DEF
 --         -- fin extension MCS
@@ -21,7 +21,7 @@ inh machine : IMachine for
 inh tam : MTAM for
          PROGRAMME, ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX, DECL,
-         E, AFFX, A, AX, R, RX, T, TX, F,FX
+         E, AFFX, A, AX, R, RX, T, TX, F,FX,DEF,DEFS,BASE
          ;
 -- ces attributs permettent de recuperer les instructions du code ASM inline       
 syn code_asm : STRING for ASM;
@@ -32,14 +32,14 @@ inh tds_asm : TDS for ASM;
 syn code : STRING for 
          ENTITES, ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          ES, ESX, DECL, -- ajoute attribut code a DECL Leonardo
-         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F,DEFS;
+         E, AFFX, A, AX, R, RX, T, TX,FX, OPREL, OPADD, OPMUL, OPUN,F,DEFS,DEF;
 inh hcode : STRING for PTRS, F, FX;
 
 
 inh tds : TDS for 
          ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
-         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS,DEFS,DEF
+         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS,DEFS,DEF,BASE,HERITAGE
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
@@ -48,8 +48,8 @@ inh htype: DTYPE for PTRS, FX, AFFX;
 syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
 inh hparams: PARAMETRES for PARFS, PARF, PARFSX, E, ES, ESX, FX, F;
 
-syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL;
-inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE,DEF;     
+syn dep :   Emplacement for INST, INSTS, BLOC, FONCTION,ENTITE, ENTITES,PARFS,PARF,PARFSX, SIX, CHAMPS, CHAMP, DECL,DEFS,DEF;
+inh hdep : Emplacement for INST, INSTS, BLOC,ENTITE, ENTITES, FONCTION,PARFS,PARF,PARFSX, SIX, TYPE, PTRS, CHAMPS, CHAMP, DECL,STYPE,DEF,DEFS;     
 
 inh champs : LCHAMPS for CHAMPS, CHAMP;
 inh declid : STRING for DECL,FONCTION;
@@ -63,8 +63,12 @@ syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for F, FX ;
 ----------------
 
-syn name : STRING for HERITAGE;
+syn name : INFOCLASS for HERITAGE;
 syn acc : STRING for ACCES;
+inh hnms : Namespace for IDC;
+syn nms : Namespace for IDC;
+inh hattribut : ArrayList<String> for DEF,DEFS,DECL;
+inh htv : ArrayList<String> for DEF,DEFS,DECL;
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -154,7 +158,7 @@ end}
 local
     tam : MTAM;
 do
-    --write tds;
+    write tds;
     tam := new MTAM();
     if (tds.chercherGlobalement("main")= null) then
         error(no_main);
@@ -217,7 +221,10 @@ do
     DECL^declt:=TYPE^type;
     DECL^tds:=ENTITE^tds;
     DECL^hdep:=ENTITE^hdep;
+    DECL^hattribut:=null;
+    DECL^htv:=null;
     
+ 
     i := ENTITE^tds.chercherLocalement(ident^txt);
     if i /= null then
        match i
@@ -251,7 +258,11 @@ do
         call DECL^tds.inserer(DECL^declid,i);
         DECL^dep:= new Emplacement (DECL^hdep.getDep() + DECL^declt.getTaille(), DECL^hdep.getReg());
     end 
-    DECL^code:=""; -- initialisation de variable 
+    DECL^code:=""; -- initialisation de variable
+   if (DECL^hattribut/=null) then
+     DECL^hattribut.add(DECL^declid);
+   end   
+     
 end}
 
 
@@ -260,6 +271,12 @@ DECL -> #tds FONCTION #dep ;
 do
     DECL^dep:=FONCTION^dep;
     DECL^code:=FONCTION^code; -- La declaration du code recoit le code de la fonction
+    if (DECL^htv/=null) then
+     DECL^htv.add(DECL^declid);
+   end   
+    
+    
+    
 end}
 #tds{
 do
@@ -1151,7 +1168,9 @@ local
  lc : LCHAMPS;
  p: POINTEUR;
  t : DTYPE;
-do 
+do
+
+  write "type de FX \n" + FX^htype; 
   match FX^htype
   with POINTEUR then
     p := FX^htype;
@@ -1317,13 +1336,14 @@ do
 end
 }
 -- definit un contenu d'un namespace
-ENTITE -> namespace identc #tds  aco ENTITES acf ;
+ENTITE -> namespace identc #tds  aco ENTITES acf #gen ;
 #tds{
 local
     ns : INFO;
-    sousnamespace : ArrayList<Namespace> ;
+    sousnamespace : ArrayList<String> ;
     nmtds : TDS;
 do
+    ENTITES^hdep:= ENTITE^hdep; 
     ns := ENTITE^tds.chercherGlobalement(identc^txt);
     if ns=null then
         nmtds := new TDS();
@@ -1336,6 +1356,14 @@ do
     end
 end
 }
+#gen{
+do
+ENTITE^code:=ENTITES^code;
+ENTITE^dep:=ENTITES^dep;
+       
+end}
+
+
 -- donne l acces au contenu du 'namespace'error(no_nms, identc^txt);  
 ENTITE -> using identc #h IDC #tds pv ;
 #h {
@@ -1356,6 +1384,9 @@ local
 do
     nom := IDC^nms.getNom();
     ENTITE^tds.inserer(nom ,IDC^nms);
+    ENTITE^code:="";
+    ENTITE^dep:=ENTITE^hdep;
+    
 end
 }
 IDC -> #h ;
@@ -1386,22 +1417,38 @@ do
 end
 }
 -- definition d'une classe (peut etre en dehors d'un namespace)
-ENTITE -> ACCES class identc HERITAGE #1 aco DEFS acf;
+ENTITE -> ACCES class identc HERITAGE #1 aco DEFS acf #gen;
+global
+tds:TDS;
+
 #1{
 local
 i:INFO;
-tds:TDS;
-attribut : ArrayList<String>; 
+
+attribut : ArrayList<String>;
+tv:  ArrayList<String>;
 do
 i:= ENTITE^tds.chercherGlobalement(identc^txt);
 if (i/=null) then
+    write"diffnull";
 error(no_nms, identc^txt);
 else
 tds := new TDS(ENTITE^tds);
 attribut := new ArrayList<String>();
-i:= new INFOCLASS(tds,attribut,null,identc^txt,HERITAGE^name,ACCES^acc);
+tv := new ArrayList<String>();
+i:= new INFOCLASS(tds,attribut,tv,null,identc^txt,HERITAGE^name,ACCES^acc);
+ENTITE^tds.inserer(identc^txt,i);
 DEFS^tds:=tds;
+DEFS^hattribut:=attribut;
+DEFS^htv:=tv;
+
 end
+end}
+#gen{
+do
+write "tds = " + tds;
+ENTITE^dep:=DEFS^dep;
+ENTITE^code:=DEFS^code;
 end}
 
 
@@ -1430,21 +1477,55 @@ do
 HERITAGE^name:=null;
 end}
 
-HERITAGE -> dpts identc IDC #name1 ;
-#name1{
-do
-HERITAGE^name:=identc^txt;
-end}
+HERITAGE -> dpts identc #name2 IDC #name1 ;
 
+
+#name1{
+local
+i:INFO;
+do
+i:= HERITAGE^tds.chercherGlobalement(identc^txt);
+if i /= null then
+       match i
+           with INFOCLASS then
+               HERITAGE^name:=i;
+           else 
+               error(heritage_existe_pas, identc^txt);
+       end                                    
+    end
+
+end}
+#name2{
+do
+IDC^hnms:=null;
+
+end}
 
 -- membres d'une classe
 DEFS -> #gen;
 #gen{
 do
 DEFS^code:="";
+DEFS^dep:=DEFS^hdep;
+
+
 end}
-DEFS ->  ACCES DEF DEFS ;
-DEF  ->  TYPE ident #tds DECL ;
+DEFS ->  ACCES #1 DEF #2 DEFS #gen;
+#1{
+do
+DEF^hdep:=DEFS^hdep;
+end}
+#2{
+do
+DEFS1^hdep:=DEF^dep;
+end}
+#gen{
+do
+DEFS^code:=DEF^code + DEFS1^code;
+DEFS^dep:=DEFS1^dep;
+end}
+
+DEF  ->  TYPE ident #tds DECL #gen ;
 #tds{
 local 
     i: INFO;
@@ -1464,38 +1545,163 @@ do
        end                                    
     end
 end}
+#gen{
+do
+    DEF^dep:= DECL^dep;
+    DEF^code :=DECL^code;  -- ENTITE^code:= "" modifie, avant ça devienait le code vide Leonardo
+end
+}
 
 
 -- constructeur
-DEF  ->  identc #1 paro PARFS parf BASE BLOC;
+DEF  ->  identc  paro #params PARFS parf BASE #1 BLOC #gen;
 #1{
 local
 i:INFO;
+tds:TDS;
+const:INFOFONC;
+tv:ArrayList<String>;
+t:DTYPE;
 do
+ t:=new DTYPEImpl("void",1); 
  i := DEF^tds.chercherGlobalement(identc^txt);
     match i with INFOCLASS then
-           -- BASE^mere :=i;
-      
+    -- BASE^mere :=i;
+       tds:=new TDS(DEF^tds);
+       const:= new INFOFONC(t,null,PARFS^params,tds);
+       BLOC^infonc:=const;
+       DEF^tds.inserer(identc^txt,const);
+       tv:= i.getTv();
+       tv.add(identc^txt); 
     else
-     error(Fonction_existe_deja, ident^txt);
+     error(Fonction_existe_deja, identc^txt);
     end
+end}
+#gen{
+do
+    DEF^dep:=BLOC^dep;    
+    DEF^code := DEF^tam.genFonction(identc^txt, 0, BLOC^type.getTaille(),BLOC^code); --A completer : enregistrer le type de retour
+end}
+#params {
+do
+PARFS^hparams := new PARAMETRES();
+
+end} 
+-- appel eventuel au constructeur de la classe parente.
+BASE -> ;
+BASE -> dpts base paro #params ES parf;
+#params{
+do
+ES^hparams:=new PARAMETRES();
+end}
+
+-- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
+PARF ->  MODE TYPE ident#tdstype;
+#tdstype{
+local
+    t : DTYPE;
+    iv : INFOVAR;
+do
+    iv := PARF^hparams.getParametre(ident^txt);
+    --t := iv.getType();
+    if (iv = null) then
+      -- iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
+      iv := new INFOVAR(TYPE^type, PARF^hdep);
+      --PARF^tds.inserer(ident^txt,iv);
+      PARF^hparams.ajouterParametre(ident^txt,iv); 
+    else
+        error(parametre_existe_deja, ident^txt);
+    end
+    PARF^dep:= new Emplacement (PARF^hdep.getDep() - TYPE^type.getTaille(), PARF^hdep.getReg());
+ end}
+
+MODE -> ref ;
+MODE -> out ; 
+F -> true #type;
+#type{
+do
+   F^type := new DTYPEImpl("booleen", 1);
+   F^code := F^tam.genCst("1");
+   F^code_est_adresse := false;
+   F^adresse := -1;
+end}  
+F -> false #type;
+#type{
+do
+   F^type := new DTYPEImpl("booleen", 1);
+   F^code := F^tam.genCst("0");
+   F^code_est_adresse := false;
+   F^adresse := -1;
+end}  
+
+
+
+
+F -> this #h FX #type;
+#type{
+do
+   F^type := FX^type;
+   F^code := ""; ---    a traiter mohamed ali
+   F^code_est_adresse := false;
+   F^adresse := -1;
+   
+end}  
+#h{
+do
+write "teeeeest";
+FX^htype:= null; 
+FX^hcode_est_adresse := false;
+  
 end}
 
 
+F -> base #h FX #type;
+#type{
+do
+   F^type := FX^type;
+   F^code := "";
+   F^code_est_adresse := false;
+   F^adresse := -1;
+   F^code_est_adresse := false;
+end}  
+#h{
+do
+FX^htype:=null;
+FX^hcode_est_adresse := false;
+end}
 
 
-
--- appel eventuel au constructeur de la classe parente.
-BASE -> ;
-BASE -> dpts base paro ES parf  ;
--- Mode de passage pour les fonctions et méthodes : rien : D, ref : D/R, out : R
-PARF ->  MODE TYPE ident ;
-MODE -> ref ;
-MODE -> out ; 
-F -> true;
-F -> false;
-F -> this FX;
-F -> base FX;
-F -> null2;
-F -> new identc IDC paro ES parf ;
+F -> null2 #gen;
+#gen{
+do
+   F^type := new DTYPEImpl("void",1);
+   F^code_est_adresse := false;
+   F^adresse := -1;
+   F^code := "";
+end}
+F -> new identc #h IDC paro ES parf #gen;
+#gen{
+local
+i:INFO;
+tv : ArrayList<String>;
+tv_etiq : String;
+do
+i := F^tds.chercherGlobalement(identc^txt);
+    match i with INFOCLASS then
+    --IDC^hnms:=null;   
+    tv := i.getTv(); 
+    tv_etiq:= tv.get(0);
+    F^code:= ES^code + "\n LOADA " + tv_etiq + "\n LOADL 1 \n SUBR Iadd \n CALLI";  
+    else
+     error(classe_existe_pas, identc^txt);
+    end
+ F^type := new DTYPEImpl("void",1);
+ F^code_est_adresse := false;
+ F^adresse := -1;
+ F^code := "";    
+end}
+#h{
+do
+IDC^hnms:=null;   
+end}
 end
