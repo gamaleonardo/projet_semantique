@@ -54,7 +54,7 @@ public class TDS extends HashMap<String, INFO> {
 		INFO i = get(n);
 		if (i == null) {
 			if (this.listNs != null) {
-				Iterator<NAMESPACE> it= this.listNs.iterator();
+				Iterator<NAMESPACE> it = this.listNs.iterator();
 				while (it.hasNext() && i == null) {
 					NAMESPACE ns = it.next();
 					if (ns.getActive()) {
@@ -65,7 +65,6 @@ public class TDS extends HashMap<String, INFO> {
 		}
 		return i;
 	}
-
 	/**
 	 * Recherche de n dans la TDS courante et ses parentes.
 	 * 
@@ -97,14 +96,9 @@ public class TDS extends HashMap<String, INFO> {
 		this.listNs.add(ns);
 	}
 	public NAMESPACE chercherNs(String s){
-		NAMESPACE n = null;
-		Iterator<NAMESPACE> it= this.listNs.iterator();
-		while (it.hasNext() && n == null) {
-			if (it.next().getNom().equals(s)) {
-				n = it.next();
-			}
-		}
-		return n;
+		for(NAMESPACE ns : this.listNs)
+			if (ns.getNom().equals(s)) return ns;
+		return null;
 	}
 
 	public String toString() {
@@ -112,7 +106,6 @@ public class TDS extends HashMap<String, INFO> {
 		Set<Map.Entry<String, INFO>> s = entrySet();
 		for (Map.Entry<String, INFO> e : s) {
 			sb.append("; " + e.getKey() + " : " + e.getValue() + '\n');
-
 		}
 		return sb.toString();
 	}

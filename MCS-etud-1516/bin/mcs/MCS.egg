@@ -62,8 +62,8 @@ inh hcode_est_adresse : BOOLEAN for FX ;
 syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for F, FX ;
 
-syn nms : Namespace for IDC;
-inh hnms : Namespace for IDC;
+syn nms : NAMESPACE for IDC;
+inh hnms : NAMESPACE for IDC;
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -1128,8 +1128,10 @@ do
                 FX^htype:=c; 
             --end
             end
-  FX^hcode_est_adresse := false;
-            end     
+        FX^hcode_est_adresse := false;
+    else
+       error(non_declaree,ident^txt);
+    end     
 end}
 
 FX ->#gen ;
@@ -1319,21 +1321,29 @@ end
 
 -- definit un contenu d'un namespace
 ENTITE -> namespace identc #tds aco ENTITES acf #gen;
+global
+    pace : ArrayList<NAMESPACE> ;
+    ns : NAMESPACE;
+    --ns2 : NAMESPACE;
+    --tds2 : TDS;
+    --tds3 : TDS;
 #tds{
 local
     i : INFO;
-    ns : Namespace;
-    --sousnamespace : ArrayList<Namespace> ;
     nmtds : TDS;
+    g : boolean;
 do
     i := ENTITE^tds.chercherNs(identc^txt);
     if i=null then
         nmtds := new TDS();
         --sousnamespace := new ArrayList<String>();
-        --ns := new Namespace(sousnamespace,nmtds,identc^txt);
-        ns := new Namespace(nmtds, identc^txt);
+        --ns := new NAMESPACE(sousnamespace,nmtds,identc^txt);
+        ns := new NAMESPACE(nmtds, identc^txt);
         ENTITE^tds.insererNs(ns);
         ENTITES^tds:= nmtds;
+        pace := ENTITE^tds.getListNs();
+        ns := pace.get(0);
+        --write ns.getActive() + "\n";
     else 
         error(ns_existe, identc^txt);
     end
@@ -1341,6 +1351,8 @@ end
 }
 #gen {
 do
+    --write "tabela de " + ns.getNom() + "\n" + ns.getNstds() + "\n";
+    --write "irmao de " + ns2.getNom() + "\n";
     ENTITE^dep := ENTITES^dep;
     ENTITE^code := "";
 end
@@ -1351,11 +1363,13 @@ ENTITE -> using identc #h IDC #tds pv #gen;
 #h {
 local
     i : INFO;
-    ns : Namespace;
+    ns : NAMESPACE;
 do
+    
+    --write identc^txt + "\n";
     i := ENTITE^tds.chercherNs(identc^txt);
     match i with
-    Namespace then 
+    NAMESPACE then 
         ns := i;
         IDC^hnms := ns ;
     else
@@ -1365,7 +1379,7 @@ end}
 #tds {
 local
    nom : String;
-   ns : Namespace;
+   ns : NAMESPACE;
 do
     ns := IDC^nms;
     ns.Active2true();
@@ -1374,7 +1388,7 @@ end
 }
 #gen {
 do
-    write "test" + IDC^nms.getActive() + "\n";
+    --write "test" + IDC^nms.getActive() + "\n";
     ENTITE^dep := new Emplacement(0, null);
     ENTITE^code := "";
 end
@@ -1395,7 +1409,7 @@ do
     tds := IDC^hnms.getNstds();
     i := tds.chercherNs(identc^txt);
     match i with
-    Namespace then 
+    NAMESPACE then 
         IDC1^hnms := i ;
     else
         error(no_nms, identc^txt);  
