@@ -39,7 +39,7 @@ inh hcode : STRING for PTRS, F, FX;
 inh tds : TDS for 
          ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
-         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS
+         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS, HERITAGE, IDC
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX, ACCES;
@@ -64,6 +64,8 @@ inh hadresse : INTEGER for F, FX ;
 
 syn nms : NAMESPACE for IDC;
 inh hnms : NAMESPACE for IDC;
+syn classe : INFOCLASSE for IDC, HERITAGE;
+inh hclasse : INFOCLASSE for IDC;
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -1368,6 +1370,7 @@ do
     
     --write identc^txt + "\n";
     i := ENTITE^tds.chercherNs(identc^txt);
+    IDC^hclasse := null;
     match i with
     NAMESPACE then 
         ns := i;
@@ -1398,6 +1401,7 @@ IDC -> #h ;
 #h {
 do
     IDC^nms := IDC^hnms;
+    IDC^classe := IDC^hclasse;
 end
 }
 IDC -> pt identc #h IDC #gen ;
@@ -1408,9 +1412,12 @@ local
 do
     tds := IDC^hnms.getNstds();
     i := tds.chercherNs(identc^txt);
-    match i with
-    NAMESPACE then 
+    match i with NAMESPACE then 
         IDC1^hnms := i ;
+    end
+    i := IDC^tds.chercherGlobalement(identc^txt); --pas sur si globalement ou localement
+    match i with INFOCLASSE then
+        IDC1^hclasse := i;
     else
         error(no_nms, identc^txt);  
     end 
@@ -1418,17 +1425,32 @@ end
 }
 #gen {
 do
+    IDC^classe := IDC1^classe;
     IDC^nms := IDC1^nms;
 end
 }
 -- definition d'une classe (peut etre en dehors d'un namespace)
-ENTITE -> ACCES class identc HERITAGE #tds aco DEFS acf ;
+ENTITE -> ACCES class identc #tds HERITAGE #cl aco DEFS acf ;
 #tds{
 local
     class : INFOCLASSE;
+    tds : TDS;
 do
-    class := new INFOCLASSE(null,null,null,identc^txt);
+    class := new INFOCLASSE(null,null,null,null,identc^txt);
+    ENTITE^tds.inserer(identc^txt, class);
+    --HERITAGE^hclasse := class;
+    HERITAGE^tds := ENTITE^tds;
 end    
+}
+#cl {
+local
+    i : INFO;
+do
+    i := ENTITE^tds.chercherGlobalement(identc^txt);
+    match i with INFOCLASSE then
+        i.setClasseMere(HERITAGE^classe);
+    end
+end
 }
 -- acces 
 ACCES -> public #type;
@@ -1450,8 +1472,30 @@ do
 end
 }
 -- heritage
---HERITAGE -> ;
---HERITAGE -> dpts identc IDC ;
+HERITAGE -> #c;
+#c{
+do
+    HERITAGE^classe := null;
+end
+}
+HERITAGE -> dpts identc #tds IDC #cl;
+#tds{
+local
+    i : INFO;
+do
+    i := HERITAGE^tds.chercherGlobalement(identc^txt);
+    match i with INFOCLASSE then 
+        IDC^hclasse := i;
+    else
+        error(no_classe,identc^txt);
+    end
+end
+}
+#cl{
+do
+    HERITAGE^classe := IDC^classe;
+end
+}
 -- membres d'une classe
 --DEFS -> ;
 --DEFS ->  ACCES DEF DEFS ;

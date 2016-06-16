@@ -12,11 +12,11 @@ _foo:
 	LOAD(1) -2[LB]
 	SUBR IAdd 
 ; fin de declaration de a
-null	RETURN (0) 1
+;null	RETURN (0) 1
 _bar:
    ; declaration de pt en 0/LB taille = 1
 ; fin de declaration de pt
-nullnull   ; declaration de u en 0/LB taille = 1
+;nullnull declaration de u en 0/LB taille = 1
 	LOADL 301
 ; fin de declaration de u
    ; declaration de v en 0/LB taille = 1
