@@ -42,7 +42,7 @@ inh tds : TDS for
          E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
-         E, AFFX, A, AX, R, RX, T, TX, F,FX;
+         E, AFFX, A, AX, R, RX, T, TX, F,FX, ACCES;
 inh htype: DTYPE for PTRS, FX, AFFX;
           
 syn params : PARAMETRES for PARFS, PARFSX, ESX, ES;
@@ -1422,11 +1422,33 @@ do
 end
 }
 -- definition d'une classe (peut etre en dehors d'un namespace)
---ENTITE -> ACCES class identc HERITAGE aco DEFS acf ;
+ENTITE -> ACCES class identc HERITAGE #tds aco DEFS acf ;
+#tds{
+local
+    class : INFOCLASSE;
+do
+    class := new INFOCLASSE(null,null,null,identc^txt);
+end    
+}
 -- acces 
---ACCES -> public;
---ACCES -> private;
---ACCES -> ;
+ACCES -> public #type;
+#type{
+do
+    ACCES^type := new DTYPEImpl("public", 0);
+end
+}
+ACCES -> private #type;
+#type{
+do
+    ACCES^type := new DTYPEImpl("private", 0);
+end
+}
+ACCES -> #type;
+#type{
+do
+    ACCES^type := new DTYPEImpl("no_modifier",0);
+end
+}
 -- heritage
 --HERITAGE -> ;
 --HERITAGE -> dpts identc IDC ;

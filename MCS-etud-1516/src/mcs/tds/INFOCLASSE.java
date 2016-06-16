@@ -61,7 +61,7 @@ public class INFOCLASSE implements INFO{
 	
 	@Override
 	public String toString() {
-		return "INFOCLASS [attributs=" + attributs + "]";
+		return "INFOCLASSE [attributs=" + attributs + "]";
 	}
 	
 

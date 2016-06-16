@@ -2,6 +2,15 @@ package mcs.type;
 
 public class DTYPEImpl implements DTYPE{
 		protected int taille;
+		protected String nature;
+		
+		public String getNature() {
+			return nature;
+		}
+
+		public void setNature(String nature) {
+			this.nature = nature;
+		}
 
 		public int getTaille() {
 			return taille;
@@ -12,7 +21,13 @@ public class DTYPEImpl implements DTYPE{
 		public String getNom() {
 			return nom;
 		}
-
+		
+		public DTYPEImpl(String n, String nature, int t){
+			this.nom = n;
+			this.nature = nature;
+			this.taille = t;
+		}
+		
 		public DTYPEImpl(String n, int t) {
 			nom = n;
 			taille = t;
