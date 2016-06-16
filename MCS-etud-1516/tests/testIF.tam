@@ -1,0 +1,33 @@
+; Generated code for tests/testIF.mcs.
+; Do not modify by hand
+; Appel a main
+	CALL(SB) main
+_main:
+   ; declaration de c en 0/LB taille = 1
+	LOADL 12
+; fin de declaration de c
+   ; declaration de y en 0/LB taille = 1
+	LOADL 999
+; fin de declaration de y
+	; if
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
+	LOADL 1
+	SUBR ieq 
+
+	JUMPIF(0) X0
+   ; declaration de d en 0/LB taille = 1
+	LOADL 5
+; fin de declaration de d
+
+	JUMP X1
+X0:
+   ; declaration de d en 0/LB taille = 1
+	LOADL 15
+; fin de declaration de d
+
+X1:
+	; fin if
+	LOADL 0
+	RETURN (0) 1

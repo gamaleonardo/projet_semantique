@@ -1,0 +1,23 @@
+; Generated code for tests/classe.mcs.
+; Do not modify by hand
+; Appel a main
+	CALL(SB) main
+_Point2D:
+nullnull	RETURN (0) 0
+_getX:
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
+	RETURN (0) 1
+_main:
+   ; declaration de m en 0/LB taille = 1
+; fin de declaration de m
+   ; declaration de p en 0/LB taille = 1
+; fin de declaration de p
+   ; declaration de z en 0/LB taille = 1
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
+; fin de declaration de z
+	LOADL 0
+	RETURN (0) 1

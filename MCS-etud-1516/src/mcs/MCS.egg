@@ -39,7 +39,7 @@ inh hcode : STRING for PTRS, F, FX;
 inh tds : TDS for 
          ENTITES,ENTITE, FONCTION, INST, BLOC, INSTS, SIX,
          PARFS, PARF, PARFSX, ES, ESX,DECL, 
-         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS,DEFS,DEF,BASE,HERITAGE
+         E, AFFX, A, AX, R, RX, T, TX, F,FX,STYPE,TYPE,CHAMP,CHAMPS,DEFS,DEF,BASE,HERITAGE, IDC
          ;
 syn type : DTYPE for TYPE, STYPE, PTRS, FONCTION, INST, BLOC, INSTS, SIX, 
          E, AFFX, A, AX, R, RX, T, TX, F,FX;
@@ -62,11 +62,11 @@ inh hcode_est_adresse : BOOLEAN for FX ;
 syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for F, FX ;
 ----------------
-
-syn name : INFOCLASS for HERITAGE;
+inh hname: INFOCLASSE for IDC;
+syn name : INFOCLASSE for HERITAGE, IDC;
 syn acc : STRING for ACCES;
-inh hnms : Namespace for IDC;
-syn nms : Namespace for IDC;
+inh hnms : NAMESPACE for IDC;
+syn nms : NAMESPACE for IDC;
 inh hattribut : ArrayList<String> for DEF,DEFS,DECL;
 inh htv : ArrayList<String> for DEF,DEFS,DECL;
 
@@ -594,7 +594,8 @@ do
     else
         -- defintion d'un nouveau type 
         i2:= new INFOVAR(TYPE^type,INST^hdep);
-        INST^tds.inserer(ident^txt,i2);  
+        INST^tds.inserer(ident^txt,i2);
+        write "\n lenardo " + INST^tds + " \n";  
         INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), INST^hdep.getReg());
         INST^type := TYPE^type;
         match TYPE^type with POINTEUR then
@@ -1091,10 +1092,10 @@ local
 do
     c := F1^type;
     match c with POINTEUR then
-	    F^type := c.getType();
-		F^code_est_adresse := true;
-		F^code :=  F1^code;
-		F^adresse := F1^adresse;  
+        F^type := c.getType();
+        F^code_est_adresse := true;
+        F^code :=  F1^code;
+        F^adresse := F1^adresse;  
     else 
         error(pas_un_pointeur, F1^type);
     end
@@ -1177,17 +1178,17 @@ do
     t := p.getType();
     match t 
     with STRUCT then
-	    s := t;
+        s := t;
         --s := FX^htype;
-	    lc := s.getChamps();
-	    c := lc.chercher(ident^txt);
-	    if c = null then
-	      error(Unaffected_ident, ident^txt) ;
-	    else
-	      FX1^hadresse := c.getDep() + lc.getTaille();
-	      FX1^htype := c.getType();       
-	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-	    end  
+        lc := s.getChamps();
+        c := lc.chercher(ident^txt);
+        if c = null then
+          error(Unaffected_ident, ident^txt) ;
+        else
+          FX1^hadresse := c.getDep() + lc.getTaille();
+          FX1^htype := c.getType();       
+          FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
+        end  
      end   
   else
     error(Wrong_Type, FX^htype);
@@ -1217,18 +1218,18 @@ do
     p := FX^htype;
     t := p.getType();
       match t 
-	  with STRUCT then
+      with STRUCT then
         s:=t;
-	    --s := FX^htype;
-	    lc := s.getChamps();
-	    c := lc.chercher(ident^txt);
-	    if c = null then
-	      error(Unaffected_ident, ident^txt) ;
-	    else
-	      FX1^htype := c.getType();        
-	      FX1^hcode_est_adresse := false;
-	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-	    end    
+        --s := FX^htype;
+        lc := s.getChamps();
+        c := lc.chercher(ident^txt);
+        if c = null then
+          error(Unaffected_ident, ident^txt) ;
+        else
+          FX1^htype := c.getType();        
+          FX1^hcode_est_adresse := false;
+          FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
+        end    
       end
   else
     error(Wrong_Type, FX^htype);
@@ -1339,17 +1340,15 @@ end
 ENTITE -> namespace identc #tds  aco ENTITES acf #gen ;
 #tds{
 local
-    ns : INFO;
-    sousnamespace : ArrayList<String> ;
+    i : INFO;
     nmtds : TDS;
+    ns : NAMESPACE;
 do
     ENTITES^hdep:= ENTITE^hdep; 
-    ns := ENTITE^tds.chercherGlobalement(identc^txt);
-    if ns=null then
+    i := ENTITE^tds.chercherGlobalement(identc^txt);
+    if i=null then
         nmtds := new TDS();
-        sousnamespace := new ArrayList<String>();
-        ns := new Namespace(sousnamespace,nmtds,identc^txt);
-        ns := new Namespace(nmtds);
+        ns := new NAMESPACE(nmtds,identc^txt);
         ENTITES^tds:= nmtds;
     else 
         error(ns_existe, identc^txt);
@@ -1369,10 +1368,13 @@ ENTITE -> using identc #h IDC #tds pv ;
 #h {
 local
     i : INFO;
+    ns : NAMESPACE;
 do
+    IDC^hname := null;
     i := ENTITE^tds.chercherGlobalement(identc^txt);
     match i with
-    Namespace then 
+    NAMESPACE then 
+        ns := i;
         IDC^hnms := i ;
     else
         error(no_nms, identc^txt); 
@@ -1381,11 +1383,13 @@ end}
 #tds {
 local
    nom : String;
+   ns : NAMESPACE;
 do
-    nom := IDC^nms.getNom();
-    ENTITE^tds.inserer(nom ,IDC^nms);
+    ns := IDC^nms;
     ENTITE^code:="";
     ENTITE^dep:=ENTITE^hdep;
+    ns.Active2true();
+    ENTITE^tds.insererNs(ns);
     
 end
 }
@@ -1393,6 +1397,7 @@ IDC -> #h ;
 #h {
 do
     IDC^nms := IDC^hnms;
+    IDC^name := IDC^hname;
 end
 }
 IDC -> pt identc #h IDC #gen ;
@@ -1404,16 +1409,22 @@ do
     tds := IDC^hnms.getNstds();
     i := tds.chercherLocalement(identc^txt);
     match i with
-    Namespace then 
+    NAMESPACE then 
         IDC1^hnms := i ;
+    end
+    i := IDC^tds.chercherGlobalement(identc^txt); --pas sur si globalement ou localement
+    match i with INFOCLASSE then
+        IDC1^hname := i;
     else
         error(no_nms, identc^txt);  
     end 
+
 end
 }
 #gen {
 do
     IDC^nms := IDC1^nms;
+    IDC^name := IDC1^name;
 end
 }
 -- definition d'une classe (peut etre en dehors d'un namespace)
@@ -1436,7 +1447,7 @@ else
 tds := new TDS(ENTITE^tds);
 attribut := new ArrayList<String>();
 tv := new ArrayList<String>();
-i:= new INFOCLASS(tds,attribut,tv,null,identc^txt,HERITAGE^name,ACCES^acc);
+i:= new INFOCLASSE(tds,attribut,tv,null,identc^txt,HERITAGE^name,ACCES^acc);
 ENTITE^tds.inserer(identc^txt,i);
 DEFS^tds:=tds;
 DEFS^hattribut:=attribut;
@@ -1478,28 +1489,24 @@ HERITAGE^name:=null;
 end}
 
 HERITAGE -> dpts identc #name2 IDC #name1 ;
-
-
 #name1{
 local
-i:INFO;
 do
-i:= HERITAGE^tds.chercherGlobalement(identc^txt);
-if i /= null then
-       match i
-           with INFOCLASS then
-               HERITAGE^name:=i;
-           else 
-               error(heritage_existe_pas, identc^txt);
-       end                                    
-    end
-
+    HERITAGE^name := IDC^name;
 end}
 #name2{
+local
+    i : INFO;
 do
-IDC^hnms:=null;
-
-end}
+    IDC^hnms := null;
+    i := HERITAGE^tds.chercherGlobalement(identc^txt);
+    match i with INFOCLASSE then 
+        IDC^hname := i;
+    else
+        error(no_classe,identc^txt);
+    end
+end
+}
 
 -- membres d'une classe
 DEFS -> #gen;
@@ -1565,7 +1572,7 @@ t:DTYPE;
 do
  t:=new DTYPEImpl("void",1); 
  i := DEF^tds.chercherGlobalement(identc^txt);
-    match i with INFOCLASS then
+    match i with INFOCLASSE then
     -- BASE^mere :=i;
        tds:=new TDS(DEF^tds);
        const:= new INFOFONC(t,null,PARFS^params,tds);
@@ -1687,7 +1694,7 @@ tv : ArrayList<String>;
 tv_etiq : String;
 do
 i := F^tds.chercherGlobalement(identc^txt);
-    match i with INFOCLASS then
+    match i with INFOCLASSE then
     --IDC^hnms:=null;   
     tv := i.getTv(); 
     tv_etiq:= tv.get(0);
@@ -1701,7 +1708,12 @@ i := F^tds.chercherGlobalement(identc^txt);
  F^code := "";    
 end}
 #h{
+local i : INFO;
 do
-IDC^hnms:=null;   
+IDC^hnms:=null;
+i := F^tds.chercherGlobalement(identc^txt);
+match i with INFOCLASSE then
+IDC^hname := i;
+end   
 end}
 end
