@@ -720,7 +720,7 @@ do
      E^code := A^code + AFFX^code;
  elseif A^type.compareTo(AFFX^type) then
      E^type := A^type;
-     E^code := AFFX^code  + A^code;-- +  E^tam.genWriteIndirectMem(A^type.getTaille()); 
+     E^code := AFFX^code  + A^code +  E^tam.genWriteIndirectMem(A^type.getTaille()); 
      
  else
       error(pas_meme_type, A^type, AFFX^type); 
@@ -737,7 +737,7 @@ end
 #r{
 do
     AFFX^type:=A^type;
-    AFFX^code := A^code +  AFFX^tam.genWriteIndirectMem(A^type.getTaille());
+    AFFX^code := A^code ;
 end}
 
 
@@ -1113,6 +1113,8 @@ end}
 #h {
 local
     d : DTYPE;
+    s : STRUCT;
+    lc : LCHAMPS;
 do
     i := F^tds.chercherGlobalement(ident^txt);
     if i /= null then
@@ -1123,8 +1125,12 @@ do
             d:=c.getType();        
                 FX^htype:=c; 
                 if !F^valeurchargee  then
-                    write "\n test :" + iv.getDep() + "  " + d;
-                    FX^hcode := F^hcode + F^tam.genReadMem(iv.getDep(), d.getTaille());
+                    match d
+                    with STRUCT then
+                        FX^hcode := F^hcode ;
+                    else
+                        FX^hcode := F^hcode + F^tam.genReadMem(iv.getDep(), d.getTaille());
+                    end
                 else 
                     FX^hcode := F^hcode +  F^tam.genReadIndirectMem(1);
                 end
@@ -1155,6 +1161,7 @@ local
  lc : LCHAMPS;
  p: POINTEUR;
  t : DTYPE;
+ t2:DTYPE;
 do 
   match FX^htype
   with POINTEUR then
@@ -1172,8 +1179,8 @@ do
             FX1^htype := c.getType();
             if FX^hadresse = -1 then
                 FX1^hadresse := -1;
-                FX1^hcode := FX^hcode + FX^tam.genComment("acces champ : " + ident^txt) +
-                  FX^tam.genAdrField(c.getEmpl())  ;
+                t2 := c.getType();
+                FX1^hcode := FX^hcode + FX^tam.genReadMem(c.getDep(), t2.getTaille())+ FX^tam.genComment("acces champ : " + ident^txt) ;
             else
                 FX1^hadresse :=  FX^hadresse + c.getDep();
                 FX1^hcode := FX^tam.genComment("acces champ : " + ident^txt);

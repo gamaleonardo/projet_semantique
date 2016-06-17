@@ -23,30 +23,21 @@ _main:
    ; declaration de m en 0/LB taille = 1
 ; Appel a _malloc
 	CALL(SB) __malloc
-	STOREI(1)
 ; fin de declaration de m
 	LOADL 6
-	STOREI(1)
 	LOAD(1) 0[LB]
+	STOREI(1)
    ; declaration de p en 0/LB taille = 1
 ; fin de declaration de p
 	LOADL 5
-	STOREI(1)
-	LOAD(2) 0[LB]
+	LOAD(1) 1[LB]
 ; acces champ : x
-	;Calcul deplacement struct 1
-	LOADL 1
-	SUBR Iadd
+	STOREI(1)
 	LOADI(1)
+	LOAD(1) 1[LB]
 ; acces champ : x
-	;Calcul deplacement struct 1
-	LOADL 1
-	SUBR Iadd
-	STOREI(1)
-	LOAD(2) 0[LB]
+	LOAD(1) 2[LB]
 ; acces champ : y
-	;Calcul deplacement struct 2
-	LOADL 2
-	SUBR Iadd
+	STOREI(1)
 	LOADL 0
 	RETURN (0) 1
