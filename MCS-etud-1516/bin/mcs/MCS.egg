@@ -1,6 +1,3 @@
-
-
-
 -----------------------------------------------------
 -- Grammaires de MC  et MCS                       --
 -----------------------------------------------------
@@ -64,6 +61,8 @@ syn code_est_adresse : BOOLEAN for  F, FX ;
 inh hcode_est_adresse : BOOLEAN for FX ;
 syn adresse : INTEGER for  F, FX ;
 inh hadresse : INTEGER for  FX ;
+inh valeurchargee : BOOLEAN for A, AX, R, RX, T, TX, F;
+
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -697,7 +696,12 @@ end}
 -- T = expression figurant dans une expression additive (TERME)
 -- F = expression figurant dans une expression multiplicative (FACTEUR)
 -----------------------------------------------------------------------
-E ->   A #h AFFX #r ;
+E ->  #h0 A #h AFFX #r ;
+#h0{
+do
+    A^valeurchargee := false;
+end
+}
 #h {
 do
     AFFX^htype := A^type;
@@ -717,7 +721,12 @@ do
  end
 end}
 
-AFFX -> affect A #r;
+AFFX -> affect #h A #r;
+#h{
+do
+    A^valeurchargee := true;
+end
+}
 #r{
 do
     AFFX^type:=A^type;
@@ -868,7 +877,6 @@ T -> #h F  TX #r ;
 do  --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
-  --F^hadresse := -1;
 end
 }
 #r{
@@ -1115,7 +1123,7 @@ do
             --else         
                 FX^htype:=c; 
                 write iv + " ";
-                if iv.getDep() != -1 then
+                if !F^valeurchargee then
                     FX^hcode := F^hcode + F^tam.genReadMem(iv.getDep(), c.getTaille());
                 else 
                     FX^hcode := F^hcode +  F^tam.genReadIndirectMem(1);
