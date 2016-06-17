@@ -1429,10 +1429,10 @@ do
     match i with
     NAMESPACE then 
         IDC1^hnms := i ;
-    end
-    i := IDC^tds.chercherGlobalement(identc^txt); --pas sur si globalement ou localement
-    match i with INFOCLASSE then
-        IDC1^hname := i;
+    --end
+    --i := IDC^tds.chercherGlobalement(identc^txt); --pas sur si globalement ou localement
+    --match i with INFOCLASSE then
+      --  IDC1^hname := i;
     else
         error(no_nms, identc^txt);  
     end 
