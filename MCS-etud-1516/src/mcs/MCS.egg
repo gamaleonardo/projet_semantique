@@ -1,3 +1,6 @@
+
+
+
 -----------------------------------------------------
 -- Grammaires de MC  et MCS                       --
 -----------------------------------------------------
@@ -60,7 +63,7 @@ inh infonc : INFOFONC for BLOC;
 syn code_est_adresse : BOOLEAN for  F, FX ;
 inh hcode_est_adresse : BOOLEAN for FX ;
 syn adresse : INTEGER for  F, FX ;
-inh hadresse : INTEGER for F, FX ;
+inh hadresse : INTEGER for  FX ;
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -262,7 +265,7 @@ do
     FONCTION^declid:=DECL^declid;
     FONCTION^declt:=DECL^declt;
     FONCTION^tds := DECL^tds;
-    FONCTION^hdep := new Emplacement(-1, new Register("LB",5));
+    FONCTION^hdep := new Emplacement(-1, new Register("LB",0));
 end}
 
 
@@ -454,7 +457,6 @@ end}
 #2{
 do
     STYPE^type := new STRUCT(lt);
-    -- a completer generation de code
 end}
  
 CHAMPS -> #dep ;
@@ -487,7 +489,6 @@ do
         CHAMP^champs.inserer(it);
         CHAMP^dep:= new Emplacement (CHAMP^hdep.getDep() + TYPE^type.getTaille(), CHAMP^hdep.getReg());     
         end
-    -- a completer generation de code
 end}
 
 
@@ -708,7 +709,7 @@ do
      E^code := A^code + AFFX^code;
  elseif A^type.compareTo(AFFX^type) then
      E^type := A^type;
-     E^code := AFFX^code  + E^tam.genWriteIndirectMem(A^type.getTaille()); ---- A^code
+     E^code := AFFX^code  + A^code +  E^tam.genWriteIndirectMem(A^type.getTaille()); 
      
  else
       error(pas_meme_type, A^type, AFFX^type); 
@@ -722,19 +723,6 @@ do
     AFFX^type:=A^type;
     AFFX^code := A^code;
 end}
---AFFX -> affect  A #type ;
---#type{
---do
---AFFX^htype := A^type;
---AFFX^hdep:= A^type.getTaille() + E^hdep;
---end}
---#type{
---do
---AFFX^dep:=A^dep;
---if (A^type/=AFFX^type) then
---   error(erreur_type,null);
---end 
---end}
 
 
 AFFX -> #gen;
@@ -880,7 +868,7 @@ T -> #h F  TX #r ;
 do  --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
-  F^hadresse := -1;
+  --F^hadresse := -1;
 end
 }
 #r{
@@ -903,7 +891,7 @@ TX ->   OPMUL   #hp F TX #r ;
 do --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
-  F^hadresse := -1;
+  --F^hadresse := -1;
      
  
 end
@@ -1035,6 +1023,7 @@ F ->  paro E parf #h FX #gen;
 do
     FX^hcode_est_adresse := true;
     FX^htype:=E^type;
+    FX^hadresse:= E^type.getTaille();
 end
 }
 #gen{
@@ -1070,37 +1059,38 @@ local
 do
     c := F1^type;
     match c with POINTEUR then
-	    F^type := c.getType();
-		F^code_est_adresse := true;
-		F^code :=  F1^code;
-		F^adresse := F1^adresse;  
+        F^type := c.getType();
+        F^code_est_adresse := true;
+        F^code :=  F1^code;
+        F^adresse := F1^adresse;  
     else 
         error(pas_un_pointeur, F1^type);
     end
 end}
 
-
 F -> ident #h FX #gen;
 global 
   c : DTYPE; 
   i : INFO;
+  iv : INFOVAR;
   e : Emplacement;
  --p:POINTEUR;
   --t:DTYPE;
-#gen {
+#gen { --ne sert à rien : on ne fait rien
 do
     i := F^tds.chercherGlobalement(ident^txt);
     if i /= null then
         match i with INFOVAR then
+            iv := i;
             c := i.getType();
             match c with POINTEUR then
                 F^code_est_adresse := true;
-                F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
+                F^code := FX^code  ;
             else
-                F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
+                F^code :=  "";
             end
             F^type := FX^type;
-            F^adresse := FX^adresse;
+            F^adresse := iv.getDep() + FX^adresse;
         end
         match i with INFOFONC then
             c := i.getType();
@@ -1118,14 +1108,22 @@ do
     if i /= null then
         match i with INFOVAR then
             c := i.getType();
+            iv := i;
             --match c with POINTEUR then
             --t:=c.getType();
              -- FX^htype := t;
             --else         
                 FX^htype:=c; 
+                write iv + " ";
+                if iv.getDep() != -1 then
+                    FX^hcode := F^hcode + F^tam.genReadMem(iv.getDep(), c.getTaille());
+                else 
+                    FX^hcode := F^hcode +  F^tam.genReadIndirectMem(1);
+                end
             --end
             end
   FX^hcode_est_adresse := false;
+  FX^hadresse := -1;
             end     
 end}
 
@@ -1134,7 +1132,7 @@ FX ->#gen ;
 do
   FX^type := FX^htype;
   FX^code_est_adresse := FX^hcode_est_adresse;
-  FX^code :="";
+  FX^code :=FX^hcode;
   FX^adresse := FX^hadresse;
 end}
 
@@ -1154,17 +1152,23 @@ do
     t := p.getType();
     match t 
     with STRUCT then
-	    s := t;
+        s := t;
         --s := FX^htype;
-	    lc := s.getChamps();
-	    c := lc.chercher(ident^txt);
-	    if c = null then
-	      error(Unaffected_ident, ident^txt) ;
-	    else
-	      FX1^hadresse := c.getDep() + lc.getTaille();
-	      FX1^htype := c.getType();       
-	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-	    end  
+        lc := s.getChamps();
+        c := lc.chercher(ident^txt);
+        if c = null then
+          error(Unaffected_ident, ident^txt) ;
+        else
+            FX1^htype := c.getType();
+            if FX^hadresse = -1 then
+                FX1^hadresse := -1;
+                FX1^hcode := FX^hcode + FX^tam.genComment("acces champ : " + ident^txt) +
+                  FX^tam.genAdrField(c.getEmpl())  ;
+            else
+                FX1^hadresse :=  FX^hadresse + c.getDep();
+                FX1^hcode := FX^tam.genComment("acces champ : " + ident^txt);
+            end
+        end  
      end   
   else
     error(Wrong_Type, FX^htype);
@@ -1194,18 +1198,18 @@ do
     p := FX^htype;
     t := p.getType();
       match t 
-	  with STRUCT then
+      with STRUCT then
         s:=t;
-	    --s := FX^htype;
-	    lc := s.getChamps();
-	    c := lc.chercher(ident^txt);
-	    if c = null then
-	      error(Unaffected_ident, ident^txt) ;
-	    else
-	      FX1^htype := c.getType();        
-	      FX1^hcode_est_adresse := false;
-	      FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
-	    end    
+        --s := FX^htype;
+        lc := s.getChamps();
+        c := lc.chercher(ident^txt);
+        if c = null then
+          error(Unaffected_ident, ident^txt) ;
+        else
+          FX1^htype := c.getType();        
+          FX1^hcode_est_adresse := false;
+          FX1^hcode := FX^hcode +  FX^tam.genAdr(c.getEmpl()) ;
+        end    
       end
   else
     error(Wrong_Type, FX^htype);
@@ -1315,13 +1319,13 @@ end}
 --#tds{
 --local
     --ns : INFO;
-    --sousnamespace : ArrayList<NAMESPACE> ;
+    --sousnamespace : ArrayList<Namespace> ;
     --nmtds : TDS;
 --do
     --ns := ENTITE^tds.chercherGlobalement(identc^txt);
     --if ns=null then
         --nmtds := new TDS(ENTITE^tds);
-        --sousnamespace := new ArrayList<NAMESPACE>();
+        --sousnamespace := new ArrayList<Namespace>();
         --ns := new Namespace(sousnamespace,nmtds);
         --ENTITE^tds.inserer(identc^txt,ns);
         --ENTITES^tds:= nmtds;
