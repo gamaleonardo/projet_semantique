@@ -1,7 +1,7 @@
 ; Generated code for tests/testPOINTEUR.mcs.
 ; Do not modify by hand
 ; Appel a main
-	CALL(SB) main
+	CALL(SB) _main
 _malloc:
    ; declaration de adr en 0/LB taille = 1
 ; fin de declaration de adr
@@ -19,45 +19,30 @@ _malloc:
 
 	RETURN (0) 1
 _main:
+	LOADL 1
+	SUBR Malloc
+	LOADL 6
+	STOREI(1)
+	LOAD(1) 0[LB]
 	LOADL 2
 	SUBR Malloc
-	LOADL 3
+	LOADL 5
+	STOREI(1)
 	LOAD(1) 0[LB]
 ; acces champ : x
-	;Calcul deplacement struct -1
-	LOADL -1
+	;Calcul deplacement struct 1
+	LOADL 1
 	SUBR Iadd
-	STOREI(1)
-	LOADL 4
-	LOAD(1) 0[LB]
-; acces champ : y
-	;Calcul deplacement struct 0
-	LOADL 0
-	SUBR Iadd
-	STOREI(1)
-   ; declaration de c en 0/LB taille = 1
 	LOADI(1)
 ; acces champ : x
-	;Calcul deplacement struct -1
-	LOADL -1
-	SUBR Iadd
-; fin de declaration de c
-	LOADI(1)
-; acces champ : y
-	;Calcul deplacement struct 0
-	LOADL 0
-	SUBR Iadd
-	LOAD(1) 0[LB]
-; acces champ : x
-	;Calcul deplacement struct -1
-	LOADL -1
+	;Calcul deplacement struct 1
+	LOADL 1
 	SUBR Iadd
 	STOREI(1)
 	LOAD(1) 0[LB]
 ; acces champ : y
-	;Calcul deplacement struct 0
-	LOADL 0
+	;Calcul deplacement struct 2
+	LOADL 2
 	SUBR Iadd
-	STOREI(1)
 	LOADL 0
 	RETURN (0) 1
