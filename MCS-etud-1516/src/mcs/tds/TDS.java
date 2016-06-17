@@ -1,9 +1,10 @@
 package mcs.tds;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 /**
  * une TDS hiérarchique.
  * 
@@ -18,6 +19,8 @@ public class TDS extends HashMap<String, INFO> {
 	 * La TDS parente
 	 */
 	private TDS parente;
+
+	private ArrayList<NAMESPACE> listNs;
 
 	/**
 	 * Constructeur pour une TDS sans parente
@@ -34,6 +37,7 @@ public class TDS extends HashMap<String, INFO> {
 	public TDS(TDS p) {
 		super();
 		parente = p;
+		listNs = new ArrayList<NAMESPACE>();
 	}
 
 	public TDS getParente() {
@@ -47,9 +51,20 @@ public class TDS extends HashMap<String, INFO> {
 	 * @return
 	 */
 	public INFO chercherLocalement(String n) {
-		return get(n);
+		INFO i = get(n);
+		if (i == null) {
+			if (this.listNs != null) {
+				Iterator<NAMESPACE> it = this.listNs.iterator();
+				while (it.hasNext() && i == null) {
+					NAMESPACE ns = it.next();
+					if (ns.getActive()) {
+						i = ns.getNstds().chercherLocalement(n);
+					}
+				}
+			}
+		}
+		return i;
 	}
-
 	/**
 	 * Recherche de n dans la TDS courante et ses parentes.
 	 * 
@@ -73,15 +88,27 @@ public class TDS extends HashMap<String, INFO> {
 	public void inserer(String n, INFO i) {
 		put(n, i);
 	}
+	
+	public ArrayList<NAMESPACE> getListNs() {
+		return listNs;
+	}
+	public void insererNs(NAMESPACE ns) {
+		this.listNs.add(ns);
+	}
+	public NAMESPACE chercherNs(String s){
+		for(NAMESPACE ns : this.listNs)
+			if (ns.getNom().equals(s)) return ns;
+		return null;
+	}
 
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		Set<Map.Entry<String, INFO>> s = entrySet();
 		for (Map.Entry<String, INFO> e : s) {
 			sb.append("; " + e.getKey() + " : " + e.getValue() + '\n');
-
 		}
 		return sb.toString();
 	}
+
 
 }
