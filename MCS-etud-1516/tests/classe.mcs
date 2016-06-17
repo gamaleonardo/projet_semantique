@@ -1,0 +1,38 @@
+class Object {
+  // attributs
+  // methodes
+  }   
+  
+  class Point2D : Object {
+      // attributs
+      int x;
+      int y;    
+      // Constructeur
+      
+      
+   Point2D(int a, int b){
+     x = a;
+     y = b;
+   } 
+   
+   int getX(){
+   return x;
+   }
+  
+   int getY(){
+   return y;
+   }
+  
+  }
+  
+        
+  int main() {
+   
+  
+   Point2D p = new Point2D (2,3);
+   //int z = p.getX();
+   
+   
+    return 0;
+  
+  }

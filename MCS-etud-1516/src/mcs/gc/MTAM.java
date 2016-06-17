@@ -3,6 +3,7 @@ package mcs.gc;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import mcs.tds.INFOVAR;
 
@@ -27,7 +28,7 @@ public class MTAM extends AbstractMachine {
 	}
 
 	public String genCall(String etiquette) {
-		return "; Appel a " + etiquette + "\n" + "\tCALL(SB) " + etiquette
+		return "; Appel a " + etiquette + "\n" + "\tCALL(SB) " + "_" + etiquette
 				+ "\n";
 	}
 
@@ -123,5 +124,27 @@ public class MTAM extends AbstractMachine {
 	
 	public String genRetour(String c){
 		return ""; //TODO 
+	}
+	
+	public String genTv(ArrayList<String> tv){
+		String res = "";
+		
+		for (int i=0 ; i<tv.size();i++){
+			if (i==0){
+				res = res  + "_" + tv.get(0)+ ":" + "\n";
+			} else {
+				res = res + "JUMP "  +"_"+tv.get(i) + "\n";
+			
+			}
+		}
+		
+		
+		return res;
+	}
+	
+	public String genThis (ArrayList<String> attribut){
+		
+	return "LOADL " + attribut.size() + "\n" + "SUBR Malloc";
+	
 	}
 }
