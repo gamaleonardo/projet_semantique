@@ -146,7 +146,7 @@ global
 local
 do 
     ENTITES^tam := new MTAM();
-    ENTITES^hdep:=new Emplacement(0, new Register("SB",1));  
+    ENTITES^hdep:=new Emplacement(0, new Register("SB",0));  
     machine := PROGRAMME^source.getMachine();
     if machine = null then
         error(NO_MACH, PROGRAMME^source.getMachName());
@@ -161,7 +161,6 @@ end}
 local
     tam : MTAM;
 do
-    --write tds;
     tam := new MTAM();
     if (tds.chercherGlobalement("main")= null) then
         error(no_main);
@@ -276,9 +275,6 @@ do
     if (DECL^htv/=null) then
     	DECL^htv.add(DECL^declid);
     end   
-    
-    
-    
 end}
 #tds{
 do
@@ -295,9 +291,8 @@ global
     ifonc:INFOFONC;
 #param{
 do
-PARFS^hparams:=new PARAMETRES();
-PARFS^hdep:= new Emplacement (-1, FONCTION^hdep.getReg());
-
+    PARFS^hparams:=new PARAMETRES();
+    PARFS^hdep:= new Emplacement (-1, FONCTION^hdep.getReg());
 end}
 
 #tds{
@@ -307,7 +302,7 @@ do
     tds:=new TDS(FONCTION^tds);
     ifonc:= new INFOFONC(FONCTION^declt,null,PARFS^params,tds);
     FONCTION^tds.inserer(FONCTION^declid,ifonc);
-    BLOC^infonc:=ifonc;    
+    BLOC^infonc:=ifonc; 
 end}
 #gen{
 do
@@ -331,12 +326,7 @@ end}
 
 PARFS -> #init PARF #hdep PARFSX #fin;
 #init{
-local
-    --p : PARAMETRES;
 do
-    --p := new PARAMETRES();
-    --PARF^hparams := p;
-    --PARFSX^hparams := p;
     PARF^hdep:=PARFS^hdep;
 end}
 #hdep{
@@ -363,11 +353,11 @@ PARFSX ->  virg #hd1 PARF #hd2 PARFSX #fin;
 #hd1{
 do
    PARF^hdep:=PARFSX^hdep;
-   end}
+end}
 #hd2{
 do
    PARFSX1^hdep:=PARF^dep;
-   end}
+end}
 #fin{
 do
     PARFSX^params := PARFSX1^params;
@@ -386,7 +376,7 @@ do
     if (iv = null) then
       -- iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
       iv := new INFOVAR(TYPE^type, PARF^hdep);
-      --PARF^tds.inserer(ident^txt,iv);
+      PARF^tds.inserer(ident^txt,iv);
       PARF^hparams.ajouterParametre(ident^txt,iv); 
     else
         error(parametre_existe_deja, ident^txt);
@@ -528,7 +518,6 @@ do
     else 
         INSTS^tds := BLOC^tds;
     end
-        
 end
 }
 #type{
@@ -585,26 +574,21 @@ local
     i2: INFOVAR;
     t:DTYPE;
 do
- 
-   
     i := INST^tds.chercherGlobalement(ident^txt);
     if i /= null then
       error(ident_existe_deja, ident^txt);
-      
-    --elseif (AFFX^type.getNom() /= "void" || TYPE^type.compareTo(AFFX^type) = false) then -- solution : si AFFX^type = void, c-est-a dire qu'on a fait une declaration sans l'affecter, ce qui n'est pas une erreur-Leonardo
-    --error(pas_meme_type, TYPE^type, AFFX^type); --bon affichage de l'erreur
     else
-        -- defintion d'un nouveau type 
+        -- defintion d'une nouvelle variable
         i2:= new INFOVAR(TYPE^type,INST^hdep);
         INST^tds.inserer(ident^txt,i2);  
         INST^dep:= new Emplacement(INST^hdep.getDep() + TYPE^type.getTaille(), INST^hdep.getReg());
         INST^type := TYPE^type;
-        match TYPE^type with POINTEUR then
-            t:= TYPE^type.getType();
-            INST^code := INST^tam.genMalloc(t.getTaille());
-        else
+        --match TYPE^type with POINTEUR then
+          --  t:= TYPE^type.getType();
+            --INST^code := INST^tam.genMalloc(t.getTaille());
+       --else
             INST^code := INST^tam.genDecl(ident^txt, i2, AFFX^code);
-        end
+        --end
     end
 end
 }
@@ -754,7 +738,6 @@ end
 do
     AFFX^type:=A^type;
     AFFX^code := A^code +  AFFX^tam.genWriteIndirectMem(A^type.getTaille());
-    
 end}
 
 
@@ -914,8 +897,6 @@ do
  else
       error(mulTypes_diff, F^type); 
  end
- 
-
 end}
 
 TX ->   OPMUL   #hp F TX #r ;
@@ -924,22 +905,16 @@ do --A corriger/Modifier
   F^hparams:=new PARAMETRES();
   F^hcode := "";
   --F^hadresse := -1;
-     
- 
 end
 }
 #r{
 do
     if F^type.compareTo(new DTYPEImpl("entier",1)) then
-       
           TX^type := F^type;
           TX^code := F^code +  TX1^code + OPMUL^code;
-    
     else
-     
         error(pas_reel, F^type); 
- end
-
+    end
 end}
  
 TX ->  #r ;
@@ -947,7 +922,7 @@ TX ->  #r ;
 do
     TX^type:=new DTYPEImpl("void",0);
     TX^code := "";
- end}
+end}
  
  
 -- operateurs multiplicatifs
@@ -983,7 +958,6 @@ F -> entier #type;
 do
    F^type := new DTYPEImpl("entier", 1);
    F^code := F^tam.genCst(entier^txt);
-   
    F^code_est_adresse := false;
    F^adresse := -1;
 end}  
@@ -1118,41 +1092,45 @@ do
             match c with POINTEUR then
                 F^code_est_adresse := true;
                 F^code := FX^code  ;
+                F^type := FX^type;
             else
-                F^code :=  "";
+                e:=iv.getEmpl();
+                F^code :=  F^tam.genReadMem(e.getDep(), c.getTaille()) + FX^code;
+                F^type := c;
             end
-            F^type := FX^type;
             F^adresse := iv.getDep() + FX^adresse;
         end
         match i with INFOFONC then
             c := i.getType();
             F^type := c;
             F^code_est_adresse := true; --Le code de f envoie vers l'emplacement de la fonction ? 
-            F^code:= FX^code + F^tam.genCall("_"+ident^txt);
+            F^code:=  F^tam.genCall("_"+ident^txt);
             e :=i.getEmpl();
             F^adresse := e.getDep();
         end
     end
 end}
 #h {
+local
+    d : DTYPE;
 do
     i := F^tds.chercherGlobalement(ident^txt);
     if i /= null then
         match i with INFOVAR then
-            c := i.getType();
             iv := i;
-            --match c with POINTEUR then
-            --t:=c.getType();
-             -- FX^htype := t;
-            --else         
+            c := iv.getType();
+            match c with POINTEUR then
+            d:=c.getType();        
                 FX^htype:=c; 
-                write iv + " ";
-                if !F^valeurchargee then
-                    FX^hcode := F^hcode + F^tam.genReadMem(iv.getDep(), c.getTaille());
+                if !F^valeurchargee  then
+                    write "\n test :" + iv.getDep() + "  " + d;
+                    FX^hcode := F^hcode + F^tam.genReadMem(iv.getDep(), d.getTaille());
                 else 
                     FX^hcode := F^hcode +  F^tam.genReadIndirectMem(1);
                 end
-            --end
+              else
+                FX^hcode := F^hcode ;
+            end
             end
   FX^hcode_est_adresse := false;
   FX^hadresse := -1;
@@ -1304,7 +1282,6 @@ ESX -> virg E ESX #gen ;
 do
    ESX^params:=ESX1^params;
    ESX^code := ESX1^code + E^code;
-  
 end}
 
 ------------- inline asm ----------------
@@ -1375,7 +1352,6 @@ do
         ENTITES^tds:= nmtds;
         pace := ENTITE^tds.getListNs();
         ns := pace.get(0);
-        --write ns.getActive() + "\n";
     else 
         error(ns_existe, identc^txt);
     end
@@ -1396,8 +1372,6 @@ local
     i : INFO;
     ns : NAMESPACE;
 do
-    
-    --write identc^txt + "\n";
     i := ENTITE^tds.chercherNs(identc^txt);
     match i with
     NAMESPACE then 
@@ -1422,7 +1396,6 @@ end
 }
 #gen {
 do
-    --write "test" + IDC^nms.getActive() + "\n";
     ENTITE^dep := new Emplacement(0, null);
     ENTITE^code := "";
 end
@@ -1621,7 +1594,6 @@ do
     -- BASE^mere :=i;
        tds:=new TDS(DEF^tds);
        const:= new INFOFONC(t,null,PARFS^params,tds);
-       write "const  " + const;
        BLOC^infonc:=const;
        DEF^tds.inserer(identc^txt,const);
        tv:= i.getTv();
@@ -1636,7 +1608,6 @@ end}
 do
     DEF^dep:=BLOC^dep;    
     DEF^code := DEF^tam.genFonction(identc^txt, 0, BLOC^type.getTaille(),BLOC^code); --A completer : enregistrer le type de retour
-    write "\n **" + identc^txt  + " " +  BLOC^code;
 end}
 #params {
 do
