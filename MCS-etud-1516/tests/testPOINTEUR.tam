@@ -17,24 +17,46 @@ _malloc:
 	STORE (1) -1[LB]
 	; resultat dans adr
 
-	;Calcul deplacement struct -1
-	LOADL -1
-	SUBR Iadd
 	RETURN (0) 1
 _main:
 	LOADL 2
 	SUBR Malloc
 	LOADL 3
+	LOAD(1) 0[LB]
+; acces champ : x
+	;Calcul deplacement struct -1
+	LOADL -1
+	SUBR Iadd
 	STOREI(1)
 	LOADL 4
+	LOAD(1) 0[LB]
+; acces champ : y
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
 	STOREI(1)
    ; declaration de c en 0/LB taille = 1
-	LOAD(1) -1[LB]
+	LOADI(1)
+; acces champ : x
+	;Calcul deplacement struct -1
+	LOADL -1
+	SUBR Iadd
 ; fin de declaration de c
-	LOAD(1) -1[LB]
+	LOADI(1)
+; acces champ : y
+	;Calcul deplacement struct 0
+	LOADL 0
+	SUBR Iadd
+	LOAD(1) 0[LB]
+; acces champ : x
+	;Calcul deplacement struct -1
+	LOADL -1
+	SUBR Iadd
 	STOREI(1)
-	;Calcul deplacement struct 2
-	LOADL 2
+	LOAD(1) 0[LB]
+; acces champ : y
+	;Calcul deplacement struct 0
+	LOADL 0
 	SUBR Iadd
 	STOREI(1)
 	LOADL 0
