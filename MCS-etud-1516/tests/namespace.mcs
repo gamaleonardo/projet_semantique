@@ -12,9 +12,7 @@ namespace A {
 using A.B;
 
 int foo() {
-	x = 10;
-	int c = y +1;
-	//test();
+	test();
 	return 0;
 }
 

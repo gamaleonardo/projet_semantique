@@ -54,9 +54,7 @@ public class TDS extends HashMap<String, INFO> {
 		INFO i = get(n);
 		if (i == null) {
 			if (this.listNs != null) {
-				Iterator<NAMESPACE> it = this.listNs.iterator();
-				while (it.hasNext() && i == null) {
-					NAMESPACE ns = it.next();
+				for(NAMESPACE ns : this.listNs){
 					if (ns.getActive()) {
 						i = ns.getNstds().chercherLocalement(n);
 					}
