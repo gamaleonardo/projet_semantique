@@ -12,7 +12,11 @@ public class INFOCLASSE implements INFO{
 	 
     protected HashMap<String,DTYPEImpl> attributs;
     protected ArrayList<String> attribut;
-    protected ArrayList<String> tv;
+    public ArrayList<String> getAttribut() {
+		return attribut;
+	}
+
+	protected ArrayList<String> tv;
     public ArrayList<String> getTv() {
 		return tv;
 	}
@@ -29,6 +33,10 @@ public class INFOCLASSE implements INFO{
     protected TDS tds;
     protected String access;
 	@Override
+	
+	
+	
+	
 	public DTYPE getType() {
 		return new DTYPEImpl(this.getNom(),1);
 	}

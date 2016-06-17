@@ -1,23 +1,40 @@
 ; Generated code for tests/classe.mcs.
 ; Do not modify by hand
 ; Appel a main
-	CALL(SB) main
+	CALL(SB) _main
+_X0:
+_X1:
+JUMP _Point2D
+JUMP _getX
+JUMP _getY
 _Point2D:
-nullnull	RETURN (0) 0
+	LOAD(1) 0[SB]
+	LOAD(1) -1[LB]
+	STOREI(1)
+	LOAD(1) 1[SB]
+	LOAD(1) -2[LB]
+	STOREI(1)
+	RETURN (0) 0
 _getX:
-	;Calcul deplacement struct 0
-	LOADL 0
-	SUBR Iadd
+	LOAD(1) 0[SB]
+	RETURN (0) 1
+_getY:
+	LOAD(1) 1[SB]
 	RETURN (0) 1
 _main:
-   ; declaration de m en 0/LB taille = 1
-; fin de declaration de m
    ; declaration de p en 0/LB taille = 1
+	LOADL 2
+	SUBR Malloc
+
+ STORE (1) 0[SB] 
+	LOADL 3
+	LOADL 2
+
+ LOADA _X1
+ LOADL 0
+ SUBR Iadd 
+ CALLI 
+	STOREI(1)
 ; fin de declaration de p
-   ; declaration de z en 0/LB taille = 1
-	;Calcul deplacement struct 0
-	LOADL 0
-	SUBR Iadd
-; fin de declaration de z
 	LOADL 0
 	RETURN (0) 1

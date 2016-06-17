@@ -69,6 +69,9 @@ inh hnms : NAMESPACE for IDC;
 syn nms : NAMESPACE for IDC;
 inh hattribut : ArrayList<String> for DEF,DEFS,DECL;
 inh htv : ArrayList<String> for DEF,DEFS,DECL;
+syn tv : ArrayList<String> for DEFS;
+
+
 
 --terminals
 space separateur is  "[\r\n\t ]+";     
@@ -158,7 +161,7 @@ end}
 local
     tam : MTAM;
 do
-    write tds;
+    --write tds;
     tam := new MTAM();
     if (tds.chercherGlobalement("main")= null) then
         error(no_main);
@@ -238,7 +241,7 @@ end}
 #gen{
 do
     ENTITE^dep:= DECL^dep;
-    ENTITE^code :=DECL^code;  -- ENTITE^code:= "" modifie, avant ça devienait le code vide Leonardo
+    ENTITE^code :=DECL^code;  
 end
 }
 
@@ -284,6 +287,7 @@ do
     FONCTION^declt:=DECL^declt;
     FONCTION^tds := DECL^tds;
     FONCTION^hdep := new Emplacement(-1, new Register("LB",5));
+    
 end}
 
 
@@ -294,6 +298,8 @@ global
 #param{
 do
 PARFS^hparams:=new PARAMETRES();
+PARFS^hdep:= new Emplacement (-1, FONCTION^hdep.getReg());
+
 end}
 
 #tds{
@@ -381,8 +387,8 @@ do
     --t := iv.getType();
     if (iv = null) then
       -- iv := new INFOVAR(TYPE^type, new Emplacement(TYPE^type.getTaille(), null));
-      iv := new INFOVAR(TYPE^type, PARF^hdep);
-      --PARF^tds.inserer(ident^txt,iv);
+      iv := new INFOVAR(TYPE^type, PARF^hdep); -- medali
+      PARF^tds.inserer(ident^txt,iv);
       PARF^hparams.ajouterParametre(ident^txt,iv); 
     else
         error(parametre_existe_deja, ident^txt);
@@ -534,6 +540,7 @@ do
   BLOC^type := INSTS^type;
   BLOC^code := INSTS^code; 
   BLOC^dep:=INSTS^dep;
+  write "blablabla" + INSTS^code; 
 end
 }
 
@@ -619,11 +626,13 @@ do
 end}
 #r{
 do
+     --write "code de E \n" + E^code;
     INST^type := new DTYPEImpl("void", 0);
     --if (E^type.getAffectable() = false && E^type.getNom() /= "void") then -- le seul cas ou on peut executer une expression est si elle est une  appel a fonction Leonardo
     --    error(pas_instruction, E^type);
    -- end
     INST^code := E^code;
+    
     INST^dep := new Emplacement(INST^hdep.getDep() + E^type.getTaille(), INST^hdep.getReg());
 end}
 
@@ -707,6 +716,7 @@ do
      INST^type := E^type;
      INST^dep:=new Emplacement(INST^hdep.getDep()+E^type.getTaille(), INST^hdep.getReg());
      INST^code := E^code + INST^tam.genRetour("A completer");   -- code : empiler E 
+     
 end}
 
 
@@ -728,11 +738,15 @@ do
  if AFFX^type.compareTo(new DTYPEImpl("void", 0)) then
      E^type := A^type;  
      E^code := A^code + AFFX^code;
- elseif A^type.compareTo(AFFX^type) then
-     E^type := A^type;
-     E^code := AFFX^code  + E^tam.genWriteIndirectMem(A^type.getTaille()); ---- A^code
      
+    
+ elseif A^type.compareTo(AFFX^type) then
+ 
+     E^type := A^type;
+     --E^code := AFFX^code  + E^tam.genWriteIndirectMem(A^type.getTaille()); ---- med ali
+     E^code := A^code + AFFX^code;
  else
+     write "\n notest";
       error(pas_meme_type, A^type, AFFX^type); 
    
  end
@@ -742,7 +756,8 @@ AFFX -> affect A #r;
 #r{
 do
     AFFX^type:=A^type;
-    AFFX^code := A^code;
+    AFFX^code := A^code +  AFFX^tam.genWriteIndirectMem(A^type.getTaille());
+    write "\n ** test de affx code"+ A^code + "** \n" ;
 end}
 --AFFX -> affect  A #type ;
 --#type{
@@ -1112,6 +1127,7 @@ global
 #gen {
 do
     i := F^tds.chercherGlobalement(ident^txt);
+    write "\n operande  " + i; 
     if i /= null then
         match i with INFOVAR then
             c := i.getType();
@@ -1119,7 +1135,8 @@ do
                 F^code_est_adresse := true;
                 F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
             else
-                F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
+               -- F^code :=  F^tam.genAdrField(i.getEmpl()) + FX^code;
+                F^code :=  F^tam.genReadMem(i.getEmpl(), c.getTaille()) + FX^code;
             end
             F^type := FX^type;
             F^adresse := FX^adresse;
@@ -1171,7 +1188,7 @@ local
  t : DTYPE;
 do
 
-  write "type de FX \n" + FX^htype; 
+  --write "type de FX \n" + FX^htype; 
   match FX^htype
   with POINTEUR then
     p := FX^htype;
@@ -1435,18 +1452,22 @@ tds:TDS;
 #1{
 local
 i:INFO;
+tv_etiq :String;
+
 
 attribut : ArrayList<String>;
 tv:  ArrayList<String>;
 do
 i:= ENTITE^tds.chercherGlobalement(identc^txt);
 if (i/=null) then
-    write"diffnull";
+    
 error(no_nms, identc^txt);
 else
 tds := new TDS(ENTITE^tds);
 attribut := new ArrayList<String>();
 tv := new ArrayList<String>();
+tv_etiq := ENTITE^tam.genEtiq();
+tv.add(tv_etiq);
 i:= new INFOCLASSE(tds,attribut,tv,null,identc^txt,HERITAGE^name,ACCES^acc);
 ENTITE^tds.inserer(identc^txt,i);
 DEFS^tds:=tds;
@@ -1457,9 +1478,9 @@ end
 end}
 #gen{
 do
-write "tds = " + tds;
+--write "tds = " + tds;
 ENTITE^dep:=DEFS^dep;
-ENTITE^code:=DEFS^code;
+ENTITE^code:= ENTITE^tam.genTv(DEFS^tv) + DEFS^code;
 end}
 
 
@@ -1514,7 +1535,7 @@ DEFS -> #gen;
 do
 DEFS^code:="";
 DEFS^dep:=DEFS^hdep;
-
+DEFS^tv:=DEFS^htv;
 
 end}
 DEFS ->  ACCES #1 DEF #2 DEFS #gen;
@@ -1530,6 +1551,7 @@ end}
 do
 DEFS^code:=DEF^code + DEFS1^code;
 DEFS^dep:=DEFS1^dep;
+DEFS^tv:=DEFS^htv;
 end}
 
 DEF  ->  TYPE ident #tds DECL #gen ;
@@ -1576,10 +1598,13 @@ do
     -- BASE^mere :=i;
        tds:=new TDS(DEF^tds);
        const:= new INFOFONC(t,null,PARFS^params,tds);
+       write "const  " + const;
        BLOC^infonc:=const;
        DEF^tds.inserer(identc^txt,const);
        tv:= i.getTv();
        tv.add(identc^txt); 
+       BLOC^hdep := new Emplacement(DEF^hdep.getDep(), new Register("LB",5));
+    
     else
      error(Fonction_existe_deja, identc^txt);
     end
@@ -1588,10 +1613,13 @@ end}
 do
     DEF^dep:=BLOC^dep;    
     DEF^code := DEF^tam.genFonction(identc^txt, 0, BLOC^type.getTaille(),BLOC^code); --A completer : enregistrer le type de retour
+    write "\n **" + identc^txt  + " " +  BLOC^code;
+
 end}
 #params {
 do
 PARFS^hparams := new PARAMETRES();
+PARFS^hdep:= new Emplacement (-1, new Register("LB",5));
 
 end} 
 -- appel eventuel au constructeur de la classe parente.
@@ -1648,14 +1676,13 @@ F -> this #h FX #type;
 #type{
 do
    F^type := FX^type;
-   F^code := ""; ---    a traiter mohamed ali
+   F^code := FX^code; ---    a traiter mohamed ali
    F^code_est_adresse := false;
    F^adresse := -1;
    
 end}  
 #h{
 do
-write "teeeeest";
 FX^htype:= null; 
 FX^hcode_est_adresse := false;
   
@@ -1666,7 +1693,7 @@ F -> base #h FX #type;
 #type{
 do
    F^type := FX^type;
-   F^code := "";
+   F^code := FX^code;
    F^code_est_adresse := false;
    F^adresse := -1;
    F^code_est_adresse := false;
@@ -1691,21 +1718,26 @@ F -> new identc #h IDC paro ES parf #gen;
 local
 i:INFO;
 tv : ArrayList<String>;
+attribut : ArrayList<String>;
 tv_etiq : String;
+num : int;
 do
 i := F^tds.chercherGlobalement(identc^txt);
     match i with INFOCLASSE then
     --IDC^hnms:=null;   
+    attribut:=i.getAttribut();
     tv := i.getTv(); 
     tv_etiq:= tv.get(0);
-    F^code:= ES^code + "\n LOADA " + tv_etiq + "\n LOADL 1 \n SUBR Iadd \n CALLI";  
+    num := tv.indexOf(identc^txt)-1;
+    F^code:= F^tam.genMalloc(attribut.size()) + "\n STORE (1) 0[SB] \n"  +  ES^code + "\n LOADA " + "_"+ tv_etiq + "\n LOADL " + num + "\n SUBR Iadd \n CALLI \n";  
+    
     else
      error(classe_existe_pas, identc^txt);
     end
  F^type := new DTYPEImpl("void",1);
  F^code_est_adresse := false;
  F^adresse := -1;
- F^code := "";    
+
 end}
 #h{
 local i : INFO;

@@ -3,33 +3,34 @@ class Object {
   // methodes
   }   
   
-  class Point2D : Object{
+  class Point2D : Object {
       // attributs
       int x;
-      int y;
+      int y;    
       // Constructeur
       
       
-  public Point2D(int a, int b){
-        
-        x = a;
-        y = b;
-  }
-   public int getX(){
-       return x;
-  }
+   Point2D(int a, int b){
+     x = a;
+     y = b;
+   } 
+   
+   int getX(){
+   return x;
+   }
   
- 
+   int getY(){
+   return y;
+   }
   
   }
   
         
   int main() {
+   
   
-  
-   int  m ;
    Point2D p = new Point2D (2,3);
-   int z = p.getX();
+   //int z = p.getX();
    
    
     return 0;
